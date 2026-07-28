@@ -204,6 +204,9 @@ export default function StatsPage() {
           <div className="text-center">
             <p className="text-xs text-white/40">هفته قبل</p>
             <p className="text-2xl font-bold text-white/70">{prevPercent}%</p>
+            <p className="text-xs text-white/40">
+              {prevWeekTotals?.done ?? 0} از {prevWeekTotals?.total ?? 0} تسک
+            </p>
           </div>
           <div
             className={`rounded-full px-3 py-1 text-sm font-medium ${
@@ -215,6 +218,9 @@ export default function StatsPage() {
           <div className="text-center">
             <p className="text-xs text-white/40">این هفته</p>
             <p className="text-2xl font-bold text-sky-300">{currentPercent}%</p>
+            <p className="text-xs text-white/40">
+              {currentWeekTotals.done} از {currentWeekTotals.total} تسک
+            </p>
           </div>
         </div>
       </div>
