@@ -85,8 +85,8 @@ export default function DailyView({ currentDate, setCurrentDate }) {
     setModalOpen(true)
   }
 
-  const handleDurationSubmit = async (endDate) => {
-    await updateTask(durationTask.id, { end_date: endDate })
+  const handleDurationSubmit = async (payload) => {
+    await updateTask(durationTask.id, payload)
     setDurationTask(null)
     loadTasks()
   }

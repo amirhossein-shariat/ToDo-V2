@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { createGoalTask, updateGoalTask, deleteGoalTask, addGoalTaskToDaily } from '../api'
-import DatePickerModal from './DatePickerModal'
+import { format } from 'date-fns'
+import { createGoalTask, updateGoalTask, deleteGoalTask, createTask } from '../api'
+import TaskModal from './TaskModal'
 
 export default function GoalDetail({ goal, onBack, onChanged, onEdit, onDelete }) {
   const [newTitle, setNewTitle] = useState('')
@@ -36,10 +37,10 @@ export default function GoalDetail({ goal, onBack, onChanged, onEdit, onDelete }
     onChanged()
   }
 
-  const handleDateSelected = async (dateStr) => {
+  const handleScheduleSubmit = async (payload) => {
     const task = pickerTask
+    await createTask({ ...payload, goal_task_id: task.id })
     setPickerTask(null)
-    await addGoalTaskToDaily(task.id, dateStr)
     setAddedId(task.id)
     setTimeout(() => setAddedId((id) => (id === task.id ? null : id)), 1800)
   }
@@ -146,8 +147,8 @@ export default function GoalDetail({ goal, onBack, onChanged, onEdit, onDelete }
                     ? 'text-emerald-300'
                     : 'text-white/40 hover:bg-sky-500/20 hover:text-sky-300'
                 }`}
-                aria-label="افزودن به تسک‌های امروز"
-                title="افزودن به تسک‌های امروز"
+                aria-label="زمان‌بندی به‌عنوان کار روزانه"
+                title="زمان‌بندی به‌عنوان کار روزانه"
               >
                 {addedId === task.id ? (
                   <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -174,10 +175,13 @@ export default function GoalDetail({ goal, onBack, onChanged, onEdit, onDelete }
         </AnimatePresence>
       </div>
 
-      <DatePickerModal
+      <TaskModal
         open={!!pickerTask}
         onClose={() => setPickerTask(null)}
-        onSelect={handleDateSelected}
+        onSubmit={handleScheduleSubmit}
+        prefillTitle={pickerTask?.title}
+        defaultDate={format(new Date(), 'yyyy-MM-dd')}
+        title="زمان‌بندی زیرتسک به‌عنوان کار روزانه"
       />
     </div>
   )

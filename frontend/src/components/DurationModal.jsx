@@ -1,30 +1,54 @@
 import { useState, useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { format, addDays } from 'date-fns'
-import { DURATION_PRESETS } from '../constants'
+import { DURATION_PRESETS, WEEK_DAYS } from '../constants'
 import { formatJalali } from '../utils/jalali'
 
 export default function DurationModal({ open, onClose, task, onSubmit }) {
   const [customDate, setCustomDate] = useState('')
+  const [recurrenceType, setRecurrenceType] = useState('daily')
+  const [recurrenceDays, setRecurrenceDays] = useState([])
+  const [patternError, setPatternError] = useState('')
 
   useEffect(() => {
-    if (open) setCustomDate(task?.end_date || '')
+    if (!open || !task) return
+    setCustomDate(task.end_date || '')
+    setRecurrenceType(task.recurrence_type)
+    setRecurrenceDays(task.recurrence_days || [])
+    setPatternError('')
   }, [open, task])
 
   if (!task) return null
 
+  const toggleDay = (idx) => {
+    setRecurrenceDays((days) =>
+      days.includes(idx) ? days.filter((d) => d !== idx) : [...days, idx],
+    )
+  }
+
   const applyPreset = (days) => {
-    onSubmit(format(addDays(new Date(), days), 'yyyy-MM-dd'))
+    onSubmit({ end_date: format(addDays(new Date(), days), 'yyyy-MM-dd') })
   }
 
   const applyCustom = (e) => {
     e.preventDefault()
-    if (customDate) onSubmit(customDate)
+    if (customDate) onSubmit({ end_date: customDate })
+  }
+
+  const applyPattern = () => {
+    if (recurrenceType === 'weekly_days' && recurrenceDays.length === 0) {
+      setPatternError('حداقل یک روز را انتخاب کنید')
+      return
+    }
+    onSubmit({
+      recurrence_type: recurrenceType,
+      recurrence_days: recurrenceType === 'weekly_days' ? recurrenceDays : null,
+    })
   }
 
   const terminateNow = () => {
     if (!confirm('این تسک از امروز به بعد کاملاً متوقف می‌شود (تاریخچه قبلی حفظ می‌ماند). ادامه می‌دهید؟')) return
-    onSubmit(format(addDays(new Date(), -1), 'yyyy-MM-dd'))
+    onSubmit({ end_date: format(addDays(new Date(), -1), 'yyyy-MM-dd') })
   }
 
   return (
@@ -43,17 +67,60 @@ export default function DurationModal({ open, onClose, task, onSubmit }) {
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             transition={{ duration: 0.2 }}
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-sm rounded-3xl border border-white/20 bg-white/10 p-6 text-right shadow-2xl backdrop-blur-2xl"
+            className="max-h-[85vh] w-full max-w-sm overflow-y-auto rounded-3xl border border-white/20 bg-white/10 p-6 text-right shadow-2xl backdrop-blur-2xl"
           >
-            <h2 className="mb-1 text-lg font-bold text-white">تنظیم مدت تکرار</h2>
+            <h2 className="mb-1 text-lg font-bold text-white">تنظیمات تکرار</h2>
             <p className="mb-4 text-xs text-white/50">{task.title}</p>
 
-            <p className="mb-3 text-sm text-white/60">
-              وضعیت فعلی:{' '}
-              <span className="text-white">
-                {task.end_date ? `تا ${formatJalali(new Date(task.end_date))}` : 'نامحدود'}
-              </span>
-            </p>
+            <p className="mb-1.5 text-xs text-white/50">الگوی تکرار</p>
+            <div className="mb-2 flex gap-2">
+              {['daily', 'weekly_days'].map((type) => (
+                <button
+                  key={type}
+                  onClick={() => setRecurrenceType(type)}
+                  className={`flex-1 rounded-xl px-2 py-2 text-xs font-medium transition-colors ${
+                    recurrenceType === type
+                      ? 'bg-sky-500 text-white'
+                      : 'bg-white/10 text-white/60 hover:bg-white/20'
+                  }`}
+                >
+                  {type === 'daily' ? 'هر روز' : 'روزهای خاص'}
+                </button>
+              ))}
+            </div>
+            {recurrenceType === 'weekly_days' && (
+              <div className="mb-2 flex flex-wrap gap-2">
+                {WEEK_DAYS.map((label, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => toggleDay(idx)}
+                    className={`rounded-lg px-3 py-1.5 text-xs transition-colors ${
+                      recurrenceDays.includes(idx)
+                        ? 'bg-sky-500 text-white'
+                        : 'bg-white/10 text-white/60 hover:bg-white/20'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+            {patternError && <p className="mb-2 text-xs text-red-300">{patternError}</p>}
+            <button
+              onClick={applyPattern}
+              className="mb-4 w-full rounded-xl bg-sky-500 py-2 text-sm font-medium text-white hover:bg-sky-400"
+            >
+              ذخیره الگوی تکرار
+            </button>
+
+            <div className="mb-3 border-t border-white/10 pt-3">
+              <p className="mb-1.5 text-xs text-white/50">
+                مدت تکرار — وضعیت فعلی:{' '}
+                <span className="text-white">
+                  {task.end_date ? `تا ${formatJalali(new Date(task.end_date))}` : 'نامحدود'}
+                </span>
+              </p>
+            </div>
 
             <div className="mb-3 grid grid-cols-2 gap-2">
               {DURATION_PRESETS.map((p) => (
@@ -68,7 +135,7 @@ export default function DurationModal({ open, onClose, task, onSubmit }) {
             </div>
 
             <button
-              onClick={() => onSubmit(null)}
+              onClick={() => onSubmit({ end_date: null })}
               className="mb-4 w-full rounded-xl bg-white/10 py-2 text-sm text-white hover:bg-emerald-500/30"
             >
               نامحدود

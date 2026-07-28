@@ -69,10 +69,6 @@ export function deleteGoalTask(taskId) {
   return request(`/goals/tasks/${taskId}`, { method: 'DELETE' })
 }
 
-export function addGoalTaskToDaily(taskId, date) {
-  return request(`/goals/tasks/${taskId}/add-to-daily?date=${date}`, { method: 'POST' })
-}
-
 export function getTaskStreaks() {
   return request('/tasks/streaks')
 }

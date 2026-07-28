@@ -1,6 +1,4 @@
-from datetime import date as date_type
-
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 
 from app import models, schemas
@@ -75,23 +73,3 @@ def delete_goal_task(task_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="زیرتسک پیدا نشد")
     db.delete(task)
     db.commit()
-
-
-@router.post("/tasks/{task_id}/add-to-daily", response_model=schemas.TaskOut, status_code=201)
-def add_goal_task_to_daily(
-    task_id: int, date: date_type = Query(...), db: Session = Depends(get_db)
-):
-    goal_task = db.query(models.GoalTask).filter(models.GoalTask.id == task_id).first()
-    if not goal_task:
-        raise HTTPException(status_code=404, detail="زیرتسک پیدا نشد")
-
-    daily_task = models.Task(
-        title=goal_task.title,
-        recurrence_type="once",
-        specific_date=date,
-        goal_task_id=goal_task.id,
-    )
-    db.add(daily_task)
-    db.commit()
-    db.refresh(daily_task)
-    return daily_task

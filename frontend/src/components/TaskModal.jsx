@@ -13,7 +13,16 @@ const emptyForm = {
   end_date: '',
 }
 
-export default function TaskModal({ open, onClose, onSubmit, initialTask, defaultDate }) {
+export default function TaskModal({
+  open,
+  onClose,
+  onSubmit,
+  initialTask,
+  defaultDate,
+  prefillTitle,
+  extraPayload,
+  title,
+}) {
   const [form, setForm] = useState(emptyForm)
   const [error, setError] = useState('')
 
@@ -30,10 +39,10 @@ export default function TaskModal({ open, onClose, onSubmit, initialTask, defaul
         end_date: initialTask.end_date || '',
       })
     } else {
-      setForm({ ...emptyForm, specific_date: defaultDate, recurrence_days: [] })
+      setForm({ ...emptyForm, title: prefillTitle || '', specific_date: defaultDate, recurrence_days: [] })
     }
     setError('')
-  }, [open, initialTask, defaultDate])
+  }, [open, initialTask, defaultDate, prefillTitle])
 
   const toggleDay = (idx) => {
     setForm((f) => ({
@@ -67,6 +76,7 @@ export default function TaskModal({ open, onClose, onSubmit, initialTask, defaul
       specific_date: form.recurrence_type === 'once' ? form.specific_date : null,
       tag: form.tag || null,
       end_date: form.recurrence_type !== 'once' ? form.end_date || null : null,
+      ...extraPayload,
     }
     onSubmit(payload)
   }
@@ -93,7 +103,7 @@ export default function TaskModal({ open, onClose, onSubmit, initialTask, defaul
             className="max-h-[85vh] w-full max-w-sm overflow-y-auto rounded-3xl border border-white/20 bg-white/10 p-6 text-right shadow-2xl backdrop-blur-2xl"
           >
             <h2 className="mb-4 text-lg font-bold text-white">
-              {initialTask ? 'ویرایش تسک' : 'تسک جدید'}
+              {title || (initialTask ? 'ویرایش تسک' : 'تسک جدید')}
             </h2>
 
             <input
@@ -188,7 +198,7 @@ export default function TaskModal({ open, onClose, onSubmit, initialTask, defaul
                     type="date"
                     value={form.end_date}
                     onChange={(e) => setForm((f) => ({ ...f, end_date: e.target.value }))}
-                    className="flex-1 rounded-lg border border-white/20 bg-white/10 px-2 py-1 text-xs text-white outline-none focus:border-sky-400 [color-scheme:dark]"
+                    className="flex-1 rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-xs text-white outline-none focus:border-sky-400 [color-scheme:dark]"
                   />
                 </div>
               </div>

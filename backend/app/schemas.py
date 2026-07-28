@@ -43,7 +43,7 @@ class TaskBase(BaseModel):
 
 
 class TaskCreate(TaskBase):
-    pass
+    goal_task_id: Optional[int] = None
 
 
 class TaskUpdate(BaseModel):
