@@ -22,7 +22,10 @@ export function buildReportHtml({ weekData, weeklyTrend, streaks, goals }) {
     .join('')
 
   const trendRows = weeklyTrend
-    .map((r) => `<tr><td>${esc(r.label)}</td><td>${r.percent}%</td></tr>`)
+    .map(
+      (r) =>
+        `<tr><td>${esc(r.label)}</td><td>${r.done} از ${r.total}</td><td>${r.percent}%</td></tr>`,
+    )
     .join('')
 
   const streakRows = streaks.length
@@ -64,7 +67,7 @@ export function buildReportHtml({ weekData, weeklyTrend, streaks, goals }) {
 
   <h2 style="font-size:16px; border-bottom:1px solid #ccc; padding-bottom:4px;">روند هفتگی ماه جاری</h2>
   <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:13px;">
-    <thead><tr style="background:#f2f2f2;"><th style="text-align:right;padding:6px;border:1px solid #ddd;">هفته</th><th style="text-align:right;padding:6px;border:1px solid #ddd;">درصد تکمیل</th></tr></thead>
+    <thead><tr style="background:#f2f2f2;"><th style="text-align:right;padding:6px;border:1px solid #ddd;">هفته</th><th style="text-align:right;padding:6px;border:1px solid #ddd;">انجام‌شده</th><th style="text-align:right;padding:6px;border:1px solid #ddd;">درصد تکمیل</th></tr></thead>
     <tbody>${trendRows.replace(/<td>/g, '<td style="padding:6px;border:1px solid #ddd;">')}</tbody>
   </table>
 

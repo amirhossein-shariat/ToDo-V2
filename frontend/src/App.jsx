@@ -67,9 +67,7 @@ export default function App() {
         </button>
       </div>
 
-      <div className="sticky top-2 z-40 mb-2 flex justify-start">
-        <SyncButton />
-      </div>
+      <SyncButton />
       <SyncBadge />
 
       <SectionTabs section={section} setSection={setSection} />

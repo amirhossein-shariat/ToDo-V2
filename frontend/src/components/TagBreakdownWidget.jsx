@@ -114,7 +114,7 @@ export default function TagBreakdownWidget() {
                   fontSize: 12,
                   direction: 'rtl',
                 }}
-                formatter={(value, name, props) => [`${props.payload.percent}%`, name]}
+                formatter={(value, name, props) => [`${value} تسک (${props.payload.percent}%)`, name]}
               />
             </PieChart>
           </ResponsiveContainer>
@@ -125,7 +125,7 @@ export default function TagBreakdownWidget() {
                   className="h-2.5 w-2.5 rounded-full"
                   style={{ backgroundColor: entry.color }}
                 />
-                {entry.name} — {entry.percent}%
+                {entry.name} — {entry.value} تسک ({entry.percent}%)
               </div>
             ))}
           </div>

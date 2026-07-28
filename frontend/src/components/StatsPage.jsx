@@ -2,13 +2,13 @@ import { useEffect, useMemo, useState } from 'react'
 import { format, startOfWeek, addDays } from 'date-fns'
 import {
   ResponsiveContainer,
-  BarChart,
+  ComposedChart,
   Bar,
   XAxis,
   YAxis,
   Tooltip,
+  Legend,
   CartesianGrid,
-  LineChart,
   Line,
 } from 'recharts'
 import { getRangeSummary, getTaskStreaks, getGoals } from '../api'
@@ -84,21 +84,20 @@ export default function StatsPage() {
   }, [toDateStr(weekStart), toDateStr(monthStart), toDateStr(monthEnd)])
 
   const weeklyTrend = useMemo(() => {
-    const groups = new Map()
-    for (const row of monthSummaries) {
-      const day = new Date(row.date)
-      const key = toDateStr(startOfWeek(day, { weekStartsOn: 6 }))
-      if (!groups.has(key)) groups.set(key, { done: 0, total: 0 })
-      const g = groups.get(key)
-      g.done += row.done
-      g.total += row.total
-    }
-    return Array.from(groups.entries())
-      .sort(([a], [b]) => (a < b ? -1 : 1))
-      .map(([, g], idx) => ({
-        label: `هفته ${idx + 1}`,
-        percent: g.total > 0 ? Math.round((g.done / g.total) * 100) : 0,
-      }))
+    const groups = []
+    monthSummaries.forEach((row, idx) => {
+      const groupIdx = Math.floor(idx / 7)
+      if (!groups[groupIdx]) groups[groupIdx] = { done: 0, total: 0, days: 0 }
+      groups[groupIdx].done += row.done
+      groups[groupIdx].total += row.total
+      groups[groupIdx].days += 1
+    })
+    return groups.map((g, idx) => ({
+      label: `هفته ${idx + 1}`,
+      percent: g.total > 0 ? Math.round((g.done / g.total) * 100) : 0,
+      done: g.done,
+      total: g.total,
+    }))
   }, [monthSummaries])
 
   const currentWeekTotals = weekData.reduce(
@@ -127,11 +126,21 @@ export default function StatsPage() {
     <div className="flex-1 space-y-4 pb-24">
       <div className="rounded-2xl border border-white/15 bg-white/5 p-4 backdrop-blur-lg">
         <h3 className="mb-3 font-medium text-white">وضعیت روزهای این هفته</h3>
-        <ResponsiveContainer width="100%" height={200}>
-          <BarChart data={weekData}>
+        <ResponsiveContainer width="100%" height={220}>
+          <ComposedChart data={weekData}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" vertical={false} />
             <XAxis dataKey="label" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }} axisLine={false} tickLine={false} />
             <YAxis
+              yAxisId="count"
+              tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }}
+              axisLine={false}
+              tickLine={false}
+              width={26}
+              allowDecimals={false}
+            />
+            <YAxis
+              yAxisId="percent"
+              orientation="right"
               tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }}
               axisLine={false}
               tickLine={false}
@@ -140,29 +149,52 @@ export default function StatsPage() {
             />
             <Tooltip
               contentStyle={chartTooltipStyle}
-              formatter={(value) => [`${value}%`, 'میزان تکمیل']}
+              formatter={(value, name) =>
+                name === 'میزان تکمیل' ? [`${value}%`, name] : [value, name]
+              }
             />
-            <Bar dataKey="percent" fill="#38bdf8" radius={[6, 6, 0, 0]} />
-          </BarChart>
+            <Legend wrapperStyle={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }} />
+            <Bar yAxisId="count" dataKey="total" name="کل تسک‌ها" fill="rgba(255,255,255,0.2)" radius={[6, 6, 0, 0]} />
+            <Bar yAxisId="count" dataKey="done" name="انجام‌شده" fill="#38bdf8" radius={[6, 6, 0, 0]} />
+            <Line yAxisId="percent" type="monotone" dataKey="percent" name="میزان تکمیل" stroke="#34ffb0" strokeWidth={2.5} dot={{ r: 4, fill: '#34ffb0' }} />
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
 
       <div className="rounded-2xl border border-white/15 bg-white/5 p-4 backdrop-blur-lg">
         <h3 className="mb-3 font-medium text-white">روند هفتگی این ماه</h3>
-        <ResponsiveContainer width="100%" height={200}>
-          <LineChart data={weeklyTrend}>
+        <ResponsiveContainer width="100%" height={220}>
+          <ComposedChart data={weeklyTrend}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" vertical={false} />
             <XAxis dataKey="label" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }} axisLine={false} tickLine={false} />
             <YAxis
+              yAxisId="count"
+              tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }}
+              axisLine={false}
+              tickLine={false}
+              width={26}
+              allowDecimals={false}
+            />
+            <YAxis
+              yAxisId="percent"
+              orientation="right"
               tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }}
               axisLine={false}
               tickLine={false}
               width={30}
               domain={[0, 100]}
             />
-            <Tooltip contentStyle={chartTooltipStyle} formatter={(value) => [`${value}%`, 'میزان تکمیل']} />
-            <Line type="monotone" dataKey="percent" stroke="#38bdf8" strokeWidth={2.5} dot={{ r: 4, fill: '#38bdf8' }} />
-          </LineChart>
+            <Tooltip
+              contentStyle={chartTooltipStyle}
+              formatter={(value, name) =>
+                name === 'میزان تکمیل' ? [`${value}%`, name] : [value, name]
+              }
+            />
+            <Legend wrapperStyle={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }} />
+            <Bar yAxisId="count" dataKey="total" name="کل تسک‌ها" fill="rgba(255,255,255,0.2)" radius={[6, 6, 0, 0]} />
+            <Bar yAxisId="count" dataKey="done" name="انجام‌شده" fill="#38bdf8" radius={[6, 6, 0, 0]} />
+            <Line yAxisId="percent" type="monotone" dataKey="percent" name="میزان تکمیل" stroke="#34ffb0" strokeWidth={2.5} dot={{ r: 4, fill: '#34ffb0' }} />
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
 
