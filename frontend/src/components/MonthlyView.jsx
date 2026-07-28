@@ -69,25 +69,30 @@ export default function MonthlyView({ currentDate, setCurrentDate, onSelectDay }
           const isGreen = (isPast || isToday) && fullyDone
           const isRed = isPast && summary?.has_incomplete_once
 
-          let ringClass = ''
-          if (isGreen) ringClass = 'ring-2 ring-emerald-400'
-          else if (isRed) ringClass = 'ring-2 ring-red-400'
-          else if (isToday) ringClass = 'ring-1 ring-sky-400'
+          let bg
+          let glow = 'none'
+          if (isGreen) {
+            bg = 'linear-gradient(135deg, #34ffb0 0%, #10d98a 55%, #06b876 100%)'
+            glow = '0 0 14px rgba(16, 217, 138, 0.65)'
+          } else if (isRed) {
+            bg = 'rgba(248, 113, 113, 0.55)'
+          } else if (summary && summary.total > 0) {
+            bg = `rgba(56, 189, 248, ${0.15 + ratio * 0.65})`
+          } else {
+            bg = 'rgba(255,255,255,0.05)'
+          }
 
           return (
             <motion.button
               key={key}
               onClick={() => onSelectDay(day)}
               whileTap={{ scale: 0.9 }}
-              className={`aspect-square rounded-lg text-xs font-medium transition-colors ${ringClass} ${
-                inMonth ? 'text-white' : 'text-white/25'
-              }`}
-              style={{
-                backgroundColor:
-                  summary && summary.total > 0
-                    ? `rgba(56, 189, 248, ${0.15 + ratio * 0.65})`
-                    : 'rgba(255,255,255,0.05)',
-              }}
+              animate={isGreen ? { scale: [1, 1.08, 1] } : { scale: 1 }}
+              transition={isGreen ? { duration: 0.5, ease: 'easeOut' } : {}}
+              className={`aspect-square rounded-lg text-xs font-bold transition-colors ${
+                isToday && !isGreen ? 'ring-1 ring-sky-400' : ''
+              } ${isGreen ? 'text-emerald-950' : inMonth ? 'text-white' : 'text-white/25'}`}
+              style={{ background: bg, boxShadow: glow }}
             >
               {dayJalali.jd}
             </motion.button>
