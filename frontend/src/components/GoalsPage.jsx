@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { getGoals, createGoal, updateGoal, deleteGoal } from '../api'
 import GoalModal from './GoalModal'
 import GoalDetail from './GoalDetail'
+import GoalCard from './GoalCard'
 
 export default function GoalsPage() {
   const [goals, setGoals] = useState([])
@@ -74,46 +75,19 @@ export default function GoalsPage() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <div className="flex-1 space-y-3 pb-24">
+      <div className="flex-1 pb-24">
         {loading && <p className="text-center text-white/40">در حال بارگذاری...</p>}
         {error && <p className="text-center text-red-300">{error}</p>}
         {!loading && !error && goals.length === 0 && (
           <p className="text-center text-white/40">هنوز هدفی ثبت نشده</p>
         )}
-        <AnimatePresence mode="popLayout">
-          {goals.map((goal) => {
-            const total = goal.tasks.length
-            const done = goal.tasks.filter((t) => t.is_done).length
-            const ratio = total > 0 ? done / total : 0
-            return (
-              <motion.button
-                layout
-                key={goal.id}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => setSelectedId(goal.id)}
-                className="w-full rounded-2xl border border-white/15 bg-white/5 p-4 text-right backdrop-blur-lg hover:bg-white/10"
-              >
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="text-xs text-white/40">
-                    {done}/{total}
-                  </span>
-                  <h3 className="font-medium text-white">{goal.title}</h3>
-                </div>
-                <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
-                  <motion.div
-                    className="h-full bg-sky-400"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${ratio * 100}%` }}
-                    transition={{ duration: 0.4 }}
-                  />
-                </div>
-              </motion.button>
-            )
-          })}
-        </AnimatePresence>
+        <div className="grid grid-cols-2 gap-3">
+          <AnimatePresence mode="popLayout">
+            {goals.map((goal) => (
+              <GoalCard key={goal.id} goal={goal} onClick={() => setSelectedId(goal.id)} />
+            ))}
+          </AnimatePresence>
+        </div>
       </div>
 
       <motion.button

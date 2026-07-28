@@ -21,6 +21,11 @@ with engine.connect() as conn:
         conn.execute(text("ALTER TABLE tasks ADD COLUMN end_date DATE"))
         conn.commit()
 
+    goal_columns = {row[1] for row in conn.execute(text("PRAGMA table_info(goals)"))}
+    if "tag" not in goal_columns:
+        conn.execute(text("ALTER TABLE goals ADD COLUMN tag VARCHAR(30)"))
+        conn.commit()
+
 app = FastAPI(title="TodoApp API")
 
 app.add_middleware(

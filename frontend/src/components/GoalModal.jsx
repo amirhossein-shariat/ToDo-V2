@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { TAGS } from '../constants'
 
 export default function GoalModal({ open, onClose, onSubmit, initialGoal }) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
+  const [tag, setTag] = useState('')
   const [error, setError] = useState('')
 
   useEffect(() => {
     if (!open) return
     setTitle(initialGoal?.title || '')
     setDescription(initialGoal?.description || '')
+    setTag(initialGoal?.tag || '')
     setError('')
   }, [open, initialGoal])
 
@@ -19,7 +22,7 @@ export default function GoalModal({ open, onClose, onSubmit, initialGoal }) {
       setError('عنوان هدف را وارد کنید')
       return
     }
-    onSubmit({ title: title.trim(), description: description.trim() || null })
+    onSubmit({ title: title.trim(), description: description.trim() || null, tag: tag || null })
   }
 
   return (
@@ -51,6 +54,26 @@ export default function GoalModal({ open, onClose, onSubmit, initialGoal }) {
               placeholder="عنوان هدف (مثلاً یادگیری پایتون)"
               className="mb-3 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-white placeholder-white/40 outline-none focus:border-sky-400"
             />
+
+            <div className="mb-3">
+              <p className="mb-1.5 text-xs text-white/50">برچسب (اختیاری)</p>
+              <div className="flex flex-wrap gap-2">
+                {TAGS.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setTag((cur) => (cur === t ? '' : t))}
+                    className={`rounded-lg px-3 py-1.5 text-xs transition-colors ${
+                      tag === t
+                        ? 'bg-sky-500 text-white'
+                        : 'bg-white/10 text-white/60 hover:bg-white/20'
+                    }`}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+            </div>
 
             <textarea
               value={description}

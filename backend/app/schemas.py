@@ -8,6 +8,12 @@ RecurrenceType = Literal["once", "daily", "weekly_days"]
 TAGS = ["کاری", "آموزشی", "شخصی", "سلامتی", "خانه", "مالی", "سرگرمی", "اجتماعی"]
 
 
+def _check_tag(v):
+    if v is not None and v not in TAGS:
+        raise ValueError(f"برچسب نامعتبر است. برچسب‌های مجاز: {', '.join(TAGS)}")
+    return v
+
+
 class TaskBase(BaseModel):
     title: str
     description: Optional[str] = None
@@ -20,9 +26,7 @@ class TaskBase(BaseModel):
     @field_validator("tag")
     @classmethod
     def validate_tag(cls, v):
-        if v is not None and v not in TAGS:
-            raise ValueError(f"برچسب نامعتبر است. برچسب‌های مجاز: {', '.join(TAGS)}")
-        return v
+        return _check_tag(v)
 
     @field_validator("recurrence_days")
     @classmethod
@@ -99,11 +103,23 @@ class GoalTaskOut(BaseModel):
 class GoalCreate(BaseModel):
     title: str
     description: Optional[str] = None
+    tag: Optional[str] = None
+
+    @field_validator("tag")
+    @classmethod
+    def validate_tag(cls, v):
+        return _check_tag(v)
 
 
 class GoalUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
+    tag: Optional[str] = None
+
+    @field_validator("tag")
+    @classmethod
+    def validate_tag(cls, v):
+        return _check_tag(v)
 
 
 class TagStat(BaseModel):
@@ -121,6 +137,7 @@ class GoalOut(BaseModel):
     id: int
     title: str
     description: Optional[str] = None
+    tag: Optional[str] = None
     tasks: List[GoalTaskOut] = []
 
     class Config:

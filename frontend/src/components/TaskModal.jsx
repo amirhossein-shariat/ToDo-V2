@@ -20,6 +20,7 @@ export default function TaskModal({
   initialTask,
   defaultDate,
   prefillTitle,
+  prefillTag,
   extraPayload,
   title,
 }) {
@@ -39,10 +40,16 @@ export default function TaskModal({
         end_date: initialTask.end_date || '',
       })
     } else {
-      setForm({ ...emptyForm, title: prefillTitle || '', specific_date: defaultDate, recurrence_days: [] })
+      setForm({
+        ...emptyForm,
+        title: prefillTitle || '',
+        tag: prefillTag || '',
+        specific_date: defaultDate,
+        recurrence_days: [],
+      })
     }
     setError('')
-  }, [open, initialTask, defaultDate, prefillTitle])
+  }, [open, initialTask, defaultDate, prefillTitle, prefillTag])
 
   const toggleDay = (idx) => {
     setForm((f) => ({

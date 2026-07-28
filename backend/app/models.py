@@ -79,6 +79,7 @@ class Goal(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(200), nullable=False)
     description = Column(Text, nullable=True)
+    tag = Column(String(30), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     tasks = relationship(

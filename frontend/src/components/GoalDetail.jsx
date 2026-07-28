@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { format } from 'date-fns'
 import { createGoalTask, updateGoalTask, deleteGoalTask, createTask } from '../api'
 import TaskModal from './TaskModal'
+import { TAG_COLORS, TAG_COLOR_FALLBACK } from '../constants'
 
 export default function GoalDetail({ goal, onBack, onChanged, onEdit, onDelete }) {
   const [newTitle, setNewTitle] = useState('')
@@ -57,7 +58,17 @@ export default function GoalDetail({ goal, onBack, onChanged, onEdit, onDelete }
       <div className="mb-4 rounded-2xl border border-white/15 bg-white/5 p-4 backdrop-blur-lg">
         <div className="mb-2 flex items-start justify-between gap-2">
           <div className="text-right">
-            <h2 className="font-bold text-white">{goal.title}</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="font-bold text-white">{goal.title}</h2>
+              {goal.tag && (
+                <span
+                  className="rounded-full px-2 py-0.5 text-[10px] font-medium text-black/80"
+                  style={{ backgroundColor: TAG_COLORS[goal.tag] || TAG_COLOR_FALLBACK }}
+                >
+                  {goal.tag}
+                </span>
+              )}
+            </div>
             {goal.description && <p className="mt-1 text-sm text-white/50">{goal.description}</p>}
           </div>
           <div className="flex shrink-0 gap-1">
@@ -180,6 +191,7 @@ export default function GoalDetail({ goal, onBack, onChanged, onEdit, onDelete }
         onClose={() => setPickerTask(null)}
         onSubmit={handleScheduleSubmit}
         prefillTitle={pickerTask?.title}
+        prefillTag={goal.tag}
         defaultDate={format(new Date(), 'yyyy-MM-dd')}
         title="زمان‌بندی زیرتسک به‌عنوان کار روزانه"
       />
