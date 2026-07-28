@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { format, startOfWeek, addDays } from 'date-fns'
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { getTagStats } from '../api'
@@ -36,13 +36,18 @@ export default function TagBreakdownWidget() {
   const [stats, setStats] = useState([])
   const [loading, setLoading] = useState(true)
 
+  const loadedRef = useRef(false)
+
   useEffect(() => {
     const load = () => {
-      setLoading(true)
+      if (!loadedRef.current) setLoading(true)
       const [start, end] = getRange(period)
       getTagStats(start, end)
         .then(setStats)
-        .finally(() => setLoading(false))
+        .finally(() => {
+          loadedRef.current = true
+          setLoading(false)
+        })
     }
     load()
     return onSyncStatus((status) => {

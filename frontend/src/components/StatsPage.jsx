@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { format, startOfWeek, addDays } from 'date-fns'
 import {
@@ -49,9 +49,11 @@ export default function StatsPage() {
   const [reportOpen, setReportOpen] = useState(false)
   const [reportData, setReportData] = useState(null)
 
+  const loadedRef = useRef(false)
+
   useEffect(() => {
     const loadStats = () => {
-      setLoading(true)
+      if (!loadedRef.current) setLoading(true)
       Promise.all([
         getRangeSummary(toDateStr(weekStart), toDateStr(addDays(weekStart, 6))),
         getRangeSummary(toDateStr(monthStart), toDateStr(monthEnd)),
@@ -75,7 +77,10 @@ export default function StatsPage() {
           )
           setStreaks(streakList.filter((s) => s.streak > 0).sort((a, b) => b.streak - a.streak))
         })
-        .finally(() => setLoading(false))
+        .finally(() => {
+          loadedRef.current = true
+          setLoading(false)
+        })
     }
 
     loadStats()

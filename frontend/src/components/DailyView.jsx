@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { format, addDays } from 'date-fns'
 import TaskItem from './TaskItem'
@@ -34,13 +34,17 @@ export default function DailyView({ currentDate, setCurrentDate }) {
   const [durationTask, setDurationTask] = useState(null)
 
   const dateStr = toDateStr(currentDate)
+  const loadedRef = useRef(false)
 
   const loadTasks = useCallback(() => {
-    setLoading(true)
+    if (!loadedRef.current) setLoading(true)
     getDailyTasks(dateStr)
       .then(setTasks)
       .catch(() => setError('اتصال به سرور برقرار نشد'))
-      .finally(() => setLoading(false))
+      .finally(() => {
+        loadedRef.current = true
+        setLoading(false)
+      })
   }, [dateStr])
 
   useEffect(() => {

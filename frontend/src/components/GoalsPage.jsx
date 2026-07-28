@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { getGoals, createGoal, updateGoal, deleteGoal } from '../api'
 import { onSyncStatus } from '../offline/sync'
@@ -14,12 +14,17 @@ export default function GoalsPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editingGoal, setEditingGoal] = useState(null)
 
+  const loadedRef = useRef(false)
+
   const loadGoals = useCallback(() => {
-    setLoading(true)
+    if (!loadedRef.current) setLoading(true)
     getGoals()
       .then(setGoals)
       .catch(() => setError('اتصال به سرور برقرار نشد'))
-      .finally(() => setLoading(false))
+      .finally(() => {
+        loadedRef.current = true
+        setLoading(false)
+      })
   }, [])
 
   useEffect(() => {
