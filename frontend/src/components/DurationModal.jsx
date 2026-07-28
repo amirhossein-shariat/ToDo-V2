@@ -22,6 +22,11 @@ export default function DurationModal({ open, onClose, task, onSubmit }) {
     if (customDate) onSubmit(customDate)
   }
 
+  const terminateNow = () => {
+    if (!confirm('این تسک از امروز به بعد کاملاً متوقف می‌شود (تاریخچه قبلی حفظ می‌ماند). ادامه می‌دهید؟')) return
+    onSubmit(format(addDays(new Date(), -1), 'yyyy-MM-dd'))
+  }
+
   return (
     <AnimatePresence>
       {open && (
@@ -85,8 +90,15 @@ export default function DurationModal({ open, onClose, task, onSubmit }) {
             </form>
 
             <button
+              onClick={terminateNow}
+              className="mt-4 w-full rounded-xl bg-red-500/20 py-2 text-sm font-medium text-red-300 hover:bg-red-500/30"
+            >
+              حذف کامل تسک (از امروز به بعد)
+            </button>
+
+            <button
               onClick={onClose}
-              className="mt-4 w-full rounded-xl bg-white/5 py-2 text-sm text-white/60 hover:bg-white/10"
+              className="mt-2 w-full rounded-xl bg-white/5 py-2 text-sm text-white/60 hover:bg-white/10"
             >
               بستن
             </button>

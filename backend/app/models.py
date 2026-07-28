@@ -44,6 +44,9 @@ class Task(Base):
     completions = relationship(
         "TaskCompletion", back_populates="task", cascade="all, delete-orphan"
     )
+    skips = relationship(
+        "TaskSkip", back_populates="task", cascade="all, delete-orphan"
+    )
 
 
 class TaskCompletion(Base):
@@ -56,6 +59,18 @@ class TaskCompletion(Base):
     completed_at = Column(DateTime, default=datetime.utcnow)
 
     task = relationship("Task", back_populates="completions")
+
+
+class TaskSkip(Base):
+    """روزی که یک تسک تکرارشونده صرفاً برای همان روز حذف/رد شده است."""
+
+    __tablename__ = "task_skips"
+
+    id = Column(Integer, primary_key=True, index=True)
+    task_id = Column(Integer, ForeignKey("tasks.id"), nullable=False)
+    date = Column(Date, nullable=False, index=True)
+
+    task = relationship("Task", back_populates="skips")
 
 
 class Goal(Base):

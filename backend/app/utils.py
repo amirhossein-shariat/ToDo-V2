@@ -10,10 +10,14 @@ def is_applicable(task, d: date) -> bool:
     if getattr(task, "end_date", None) and d > task.end_date:
         return False
     if task.recurrence_type == "daily":
-        return True
-    if task.recurrence_type == "weekly_days":
-        return week_day_index(d) in (task.recurrence_days or [])
-    return False
+        applicable = True
+    elif task.recurrence_type == "weekly_days":
+        applicable = week_day_index(d) in (task.recurrence_days or [])
+    else:
+        return False
+    if applicable and any(s.date == d for s in task.skips):
+        return False
+    return applicable
 
 
 def compute_streak(task, completed_dates: set, today: date) -> int:

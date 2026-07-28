@@ -182,6 +182,30 @@ def delete_task(task_id: int, db: Session = Depends(get_db)):
     db.commit()
 
 
+@router.delete("/{task_id}/occurrence", status_code=204)
+def delete_task_occurrence(
+    task_id: int, date: date_type = Query(...), db: Session = Depends(get_db)
+):
+    """حذف یک تسک تکرارشونده فقط برای یک روز مشخص (بدون تأثیر روی روزهای دیگر)."""
+    task = db.query(models.Task).filter(models.Task.id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="تسک پیدا نشد")
+
+    db.query(models.TaskCompletion).filter(
+        models.TaskCompletion.task_id == task_id, models.TaskCompletion.date == date
+    ).delete()
+
+    exists = (
+        db.query(models.TaskSkip)
+        .filter(models.TaskSkip.task_id == task_id, models.TaskSkip.date == date)
+        .first()
+    )
+    if not exists:
+        db.add(models.TaskSkip(task_id=task_id, date=date))
+
+    db.commit()
+
+
 @router.post("/{task_id}/toggle", response_model=schemas.DailyTaskOut)
 def toggle_completion(task_id: int, date: date_type = Query(...), db: Session = Depends(get_db)):
     task = db.query(models.Task).filter(models.Task.id == task_id).first()

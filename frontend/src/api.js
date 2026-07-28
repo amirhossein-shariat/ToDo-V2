@@ -33,6 +33,10 @@ export function deleteTask(id) {
   return request(`/tasks/${id}`, { method: 'DELETE' })
 }
 
+export function deleteTaskOccurrence(id, date) {
+  return request(`/tasks/${id}/occurrence?date=${date}`, { method: 'DELETE' })
+}
+
 export function toggleTaskCompletion(id, date) {
   return request(`/tasks/${id}/toggle?date=${date}`, { method: 'POST' })
 }

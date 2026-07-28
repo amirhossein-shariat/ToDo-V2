@@ -5,7 +5,14 @@ import TaskItem from './TaskItem'
 import TaskModal from './TaskModal'
 import DateNav from './DateNav'
 import DurationModal from './DurationModal'
-import { getDailyTasks, createTask, updateTask, deleteTask, toggleTaskCompletion } from '../api'
+import {
+  getDailyTasks,
+  createTask,
+  updateTask,
+  deleteTask,
+  deleteTaskOccurrence,
+  toggleTaskCompletion,
+} from '../api'
 import { WEEK_DAYS } from '../constants'
 import { formatJalali } from '../utils/jalali'
 
@@ -54,6 +61,15 @@ export default function DailyView({ currentDate, setCurrentDate }) {
     setTasks((prev) => prev.filter((t) => t.id !== task.id))
     try {
       await deleteTask(task.id)
+    } catch {
+      loadTasks()
+    }
+  }
+
+  const handleDeleteOccurrence = async (task) => {
+    setTasks((prev) => prev.filter((t) => t.id !== task.id))
+    try {
+      await deleteTaskOccurrence(task.id, dateStr)
     } catch {
       loadTasks()
     }
@@ -137,6 +153,7 @@ export default function DailyView({ currentDate, setCurrentDate }) {
               onEdit={handleEdit}
               onDelete={handleDelete}
               onDuration={setDurationTask}
+              onDeleteOccurrence={handleDeleteOccurrence}
             />
           ))}
         </AnimatePresence>

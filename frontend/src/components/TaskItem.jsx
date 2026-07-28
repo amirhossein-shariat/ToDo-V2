@@ -2,7 +2,7 @@ import { motion } from 'framer-motion'
 import { RECURRENCE_LABELS, TAG_COLORS, TAG_COLOR_FALLBACK } from '../constants'
 import { formatJalali } from '../utils/jalali'
 
-export default function TaskItem({ task, onToggle, onEdit, onDelete, onDuration }) {
+export default function TaskItem({ task, onToggle, onEdit, onDelete, onDuration, onDeleteOccurrence }) {
   const isRecurring = task.recurrence_type === 'daily' || task.recurrence_type === 'weekly_days'
 
   return (
@@ -69,17 +69,29 @@ export default function TaskItem({ task, onToggle, onEdit, onDelete, onDuration 
 
       <div className="flex shrink-0 gap-1">
         {isRecurring ? (
-          <button
-            onClick={() => onDuration(task)}
-            className="rounded-lg p-2 text-white/50 hover:bg-white/10 hover:text-white"
-            aria-label="تنظیم مدت تکرار"
-            title="تنظیم مدت تکرار"
-          >
-            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="9" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 7v5l3 3" />
-            </svg>
-          </button>
+          <>
+            <button
+              onClick={() => onDuration(task)}
+              className="rounded-lg p-2 text-white/50 hover:bg-white/10 hover:text-white"
+              aria-label="تنظیم مدت تکرار"
+              title="تنظیم مدت تکرار"
+            >
+              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="9" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 7v5l3 3" />
+              </svg>
+            </button>
+            <button
+              onClick={() => onDeleteOccurrence(task)}
+              className="rounded-lg p-2 text-white/50 hover:bg-red-500/20 hover:text-red-300"
+              aria-label="حذف فقط برای همین روز"
+              title="حذف فقط برای همین روز"
+            >
+              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 7h12M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2m2 0v13a2 2 0 01-2 2H8a2 2 0 01-2-2V7h12z" />
+              </svg>
+            </button>
+          </>
         ) : (
           <>
             <button
