@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { format, startOfWeek, addDays } from 'date-fns'
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { getTagStats } from '../api'
+import { onSyncStatus } from '../offline/sync'
 import { TAG_COLORS, TAG_COLOR_FALLBACK } from '../constants'
 import { gregorianToJalali, jalaliToGregorian, jalaliMonthLength } from '../utils/jalali'
 
@@ -36,11 +37,17 @@ export default function TagBreakdownWidget() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    setLoading(true)
-    const [start, end] = getRange(period)
-    getTagStats(start, end)
-      .then(setStats)
-      .finally(() => setLoading(false))
+    const load = () => {
+      setLoading(true)
+      const [start, end] = getRange(period)
+      getTagStats(start, end)
+        .then(setStats)
+        .finally(() => setLoading(false))
+    }
+    load()
+    return onSyncStatus((status) => {
+      if (status === 'synced' || status === 'partial') load()
+    })
   }, [period])
 
   const total = stats.reduce((sum, s) => sum + s.count, 0)

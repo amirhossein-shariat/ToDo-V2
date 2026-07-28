@@ -14,3 +14,4 @@ backend/*.db
 .vscode/
 .idea/
 .claude/
+frontend/dev-dist/

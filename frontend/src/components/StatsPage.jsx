@@ -12,6 +12,7 @@ import {
   Line,
 } from 'recharts'
 import { getRangeSummary, getTaskStreaks, getGoals } from '../api'
+import { onSyncStatus } from '../offline/sync'
 import { WEEK_DAYS } from '../constants'
 import { gregorianToJalali, jalaliToGregorian, jalaliMonthLength } from '../utils/jalali'
 import ReportModal from './ReportModal'
@@ -48,31 +49,38 @@ export default function StatsPage() {
   const [reportData, setReportData] = useState(null)
 
   useEffect(() => {
-    setLoading(true)
-    Promise.all([
-      getRangeSummary(toDateStr(weekStart), toDateStr(addDays(weekStart, 6))),
-      getRangeSummary(toDateStr(monthStart), toDateStr(monthEnd)),
-      getRangeSummary(toDateStr(prevWeekStart), toDateStr(addDays(prevWeekStart, 6))),
-      getTaskStreaks(),
-    ])
-      .then(([week, month, prevWeek, streakList]) => {
-        setWeekData(
-          week.map((row, idx) => ({
-            ...row,
-            label: WEEK_DAYS[idx],
-            percent: row.total > 0 ? Math.round((row.done / row.total) * 100) : 0,
-          })),
-        )
-        setMonthSummaries(month)
-        setPrevWeekTotals(
-          prevWeek.reduce(
-            (acc, r) => ({ done: acc.done + r.done, total: acc.total + r.total }),
-            { done: 0, total: 0 },
-          ),
-        )
-        setStreaks(streakList.filter((s) => s.streak > 0).sort((a, b) => b.streak - a.streak))
-      })
-      .finally(() => setLoading(false))
+    const loadStats = () => {
+      setLoading(true)
+      Promise.all([
+        getRangeSummary(toDateStr(weekStart), toDateStr(addDays(weekStart, 6))),
+        getRangeSummary(toDateStr(monthStart), toDateStr(monthEnd)),
+        getRangeSummary(toDateStr(prevWeekStart), toDateStr(addDays(prevWeekStart, 6))),
+        getTaskStreaks(),
+      ])
+        .then(([week, month, prevWeek, streakList]) => {
+          setWeekData(
+            week.map((row, idx) => ({
+              ...row,
+              label: WEEK_DAYS[idx],
+              percent: row.total > 0 ? Math.round((row.done / row.total) * 100) : 0,
+            })),
+          )
+          setMonthSummaries(month)
+          setPrevWeekTotals(
+            prevWeek.reduce(
+              (acc, r) => ({ done: acc.done + r.done, total: acc.total + r.total }),
+              { done: 0, total: 0 },
+            ),
+          )
+          setStreaks(streakList.filter((s) => s.streak > 0).sort((a, b) => b.streak - a.streak))
+        })
+        .finally(() => setLoading(false))
+    }
+
+    loadStats()
+    return onSyncStatus((status) => {
+      if (status === 'synced' || status === 'partial') loadStats()
+    })
   }, [toDateStr(weekStart), toDateStr(monthStart), toDateStr(monthEnd)])
 
   const weeklyTrend = useMemo(() => {
