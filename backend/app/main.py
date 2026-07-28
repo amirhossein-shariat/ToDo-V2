@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import Base, engine
 from app import models  # noqa: F401 — ensures models are registered before create_all
-from app.routers import tasks
+from app.routers import tasks, goals
 
 Base.metadata.create_all(bind=engine)
 
@@ -17,6 +17,7 @@ app.add_middleware(
 )
 
 app.include_router(tasks.router)
+app.include_router(goals.router)
 
 
 @app.get("/api/health")

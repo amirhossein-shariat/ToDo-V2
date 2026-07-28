@@ -1,10 +1,13 @@
 import { useState } from 'react'
+import SectionTabs from './components/SectionTabs'
 import ViewTabs from './components/ViewTabs'
 import DailyView from './components/DailyView'
 import WeeklyView from './components/WeeklyView'
 import MonthlyView from './components/MonthlyView'
+import GoalsPage from './components/GoalsPage'
 
 export default function App() {
+  const [section, setSection] = useState('tasks')
   const [view, setView] = useState('day')
   const [currentDate, setCurrentDate] = useState(new Date())
 
@@ -15,20 +18,37 @@ export default function App() {
 
   return (
     <div className="mx-auto flex min-h-screen max-w-lg flex-col p-4 sm:p-6">
-      <header className="mb-6 text-center">
+      <header className="mb-4 text-center">
         <h1 className="text-2xl font-bold text-white">TodoApp</h1>
-        <p className="text-sm text-white/50">مدیریت روزانه کارها</p>
+        <p className="text-sm text-white/50">مدیریت کارها و اهداف</p>
       </header>
 
-      <ViewTabs view={view} setView={setView} />
+      <SectionTabs section={section} setSection={setSection} />
 
-      {view === 'day' && <DailyView currentDate={currentDate} setCurrentDate={setCurrentDate} />}
-      {view === 'week' && (
-        <WeeklyView currentDate={currentDate} setCurrentDate={setCurrentDate} onSelectDay={goToDay} />
+      {section === 'tasks' && (
+        <>
+          <ViewTabs view={view} setView={setView} />
+          {view === 'day' && (
+            <DailyView currentDate={currentDate} setCurrentDate={setCurrentDate} />
+          )}
+          {view === 'week' && (
+            <WeeklyView
+              currentDate={currentDate}
+              setCurrentDate={setCurrentDate}
+              onSelectDay={goToDay}
+            />
+          )}
+          {view === 'month' && (
+            <MonthlyView
+              currentDate={currentDate}
+              setCurrentDate={setCurrentDate}
+              onSelectDay={goToDay}
+            />
+          )}
+        </>
       )}
-      {view === 'month' && (
-        <MonthlyView currentDate={currentDate} setCurrentDate={setCurrentDate} onSelectDay={goToDay} />
-      )}
+
+      {section === 'goals' && <GoalsPage />}
     </div>
   )
 }

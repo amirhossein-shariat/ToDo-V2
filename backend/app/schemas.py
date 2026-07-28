@@ -60,3 +60,42 @@ class DaySummary(BaseModel):
     date: date_type
     total: int
     done: int
+
+
+class GoalTaskCreate(BaseModel):
+    title: str
+
+
+class GoalTaskUpdate(BaseModel):
+    title: Optional[str] = None
+    is_done: Optional[bool] = None
+
+
+class GoalTaskOut(BaseModel):
+    id: int
+    goal_id: int
+    title: str
+    is_done: bool
+
+    class Config:
+        from_attributes = True
+
+
+class GoalCreate(BaseModel):
+    title: str
+    description: Optional[str] = None
+
+
+class GoalUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+
+
+class GoalOut(BaseModel):
+    id: int
+    title: str
+    description: Optional[str] = None
+    tasks: List[GoalTaskOut] = []
+
+    class Config:
+        from_attributes = True

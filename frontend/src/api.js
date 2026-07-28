@@ -36,3 +36,31 @@ export function deleteTask(id) {
 export function toggleTaskCompletion(id, date) {
   return request(`/tasks/${id}/toggle?date=${date}`, { method: 'POST' })
 }
+
+export function getGoals() {
+  return request('/goals')
+}
+
+export function createGoal(payload) {
+  return request('/goals', { method: 'POST', body: JSON.stringify(payload) })
+}
+
+export function updateGoal(id, payload) {
+  return request(`/goals/${id}`, { method: 'PUT', body: JSON.stringify(payload) })
+}
+
+export function deleteGoal(id) {
+  return request(`/goals/${id}`, { method: 'DELETE' })
+}
+
+export function createGoalTask(goalId, title) {
+  return request(`/goals/${goalId}/tasks`, { method: 'POST', body: JSON.stringify({ title }) })
+}
+
+export function updateGoalTask(taskId, payload) {
+  return request(`/goals/tasks/${taskId}`, { method: 'PUT', body: JSON.stringify(payload) })
+}
+
+export function deleteGoalTask(taskId) {
+  return request(`/goals/tasks/${taskId}`, { method: 'DELETE' })
+}
