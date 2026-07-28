@@ -20,30 +20,30 @@ export default function ReportModal({ open, onClose, data }) {
             exit={{ opacity: 0, scale: 0.97, y: 10 }}
             className="flex max-h-[90vh] w-full max-w-2xl flex-col rounded-3xl bg-white shadow-2xl"
           >
-            <div className="flex items-center justify-between border-b border-black/10 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-black/10 p-4">
               <h2 className="font-bold text-black">پیش‌نمایش گزارش</h2>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => window.print()}
-                  className="rounded-xl bg-sky-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-sky-400"
+                  className="rounded-xl bg-sky-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-sky-400 sm:text-sm"
                 >
-                  چاپ / ذخیره PDF
+                  چاپ / PDF
                 </button>
                 <button
                   onClick={() => downloadWordReport(html)}
-                  className="rounded-xl bg-emerald-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-400"
+                  className="rounded-xl bg-emerald-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-400 sm:text-sm"
                 >
-                  دانلود Word
+                  Word
                 </button>
                 <button
                   onClick={onClose}
-                  className="rounded-xl bg-black/5 px-3 py-1.5 text-sm text-black/60 hover:bg-black/10"
+                  className="rounded-xl bg-black/5 px-3 py-1.5 text-xs text-black/60 hover:bg-black/10 sm:text-sm"
                 >
                   بستن
                 </button>
               </div>
             </div>
-            <div className="overflow-y-auto p-2">
+            <div className="overflow-y-auto overscroll-contain p-2">
               <div id="print-report" dangerouslySetInnerHTML={{ __html: html }} />
             </div>
           </motion.div>
