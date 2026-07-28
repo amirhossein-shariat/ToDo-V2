@@ -6,7 +6,7 @@ import { WEEK_DAYS, TAGS, DURATION_PRESETS } from '../constants'
 const emptyForm = {
   title: '',
   description: '',
-  recurrence_type: 'daily',
+  recurrence_type: 'once',
   recurrence_days: [],
   specific_date: '',
   tag: '',
