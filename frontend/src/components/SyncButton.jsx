@@ -50,13 +50,13 @@ export default function SyncButton() {
       onClick={() => runSync()}
       whileTap={{ scale: 0.88 }}
       whileHover={{ scale: 1.05 }}
-      className={`fixed left-4 top-4 z-40 flex h-11 w-11 items-center justify-center rounded-full border backdrop-blur-lg shadow-lg ${colorClass}`}
+      className={`fixed left-3 top-3 z-40 flex h-8 w-8 items-center justify-center rounded-full border backdrop-blur-lg shadow-md ${colorClass}`}
       aria-label={label}
       title={label}
     >
       <motion.svg
         viewBox="0 0 24 24"
-        className="h-5 w-5"
+        className="h-3.5 w-3.5"
         fill="none"
         stroke="currentColor"
         strokeWidth="2.2"
@@ -78,7 +78,7 @@ export default function SyncButton() {
         <motion.span
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white"
+          className="absolute -right-1 -top-1 flex h-3 w-3 items-center justify-center rounded-full bg-red-500 text-[7px] font-bold text-white"
         >
           {pending}
         </motion.span>
