@@ -1,12 +1,16 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { login } from '../auth'
+import { getServerUrl, setServerUrl } from '../config'
+import { Capacitor } from '@capacitor/core'
 
 export default function LoginScreen({ onSuccess }) {
   const [phone, setPhone] = useState('')
   const [pin, setPin] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [serverUrl, setServerUrlInput] = useState(getServerUrl())
+  const isNative = Capacitor.isNativePlatform()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -19,8 +23,13 @@ export default function LoginScreen({ onSuccess }) {
       setError('رمز باید دقیقاً ۴ رقم باشد')
       return
     }
+    if (isNative && !serverUrl.trim()) {
+      setError('آدرس سرور را وارد کنید')
+      return
+    }
     setBusy(true)
     try {
+      if (isNative) setServerUrl(serverUrl)
       await login(phone.trim(), pin)
       onSuccess()
     } catch (err) {
@@ -46,6 +55,18 @@ export default function LoginScreen({ onSuccess }) {
           Spark
         </h1>
         <p className="mb-6 text-sm text-white/50">ورود یا ساخت حساب با شماره تلفن</p>
+
+        {isNative && (
+          <input
+            type="url"
+            inputMode="url"
+            dir="ltr"
+            value={serverUrl}
+            onChange={(e) => setServerUrlInput(e.target.value)}
+            placeholder="آدرس سرور — مثلاً http://192.168.1.10:8000"
+            className="mb-3 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-center text-sm text-white placeholder-white/40 outline-none focus:border-sky-400"
+          />
+        )}
 
         <input
           type="tel"

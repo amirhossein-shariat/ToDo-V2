@@ -1,7 +1,6 @@
 import { getAll, put, remove, getPendingOps, removePendingOp, getMeta, setMeta } from './db'
 import { authHeaders, clearSession, isLoggedIn } from '../auth'
-
-const BASE = '/api'
+import { getServerUrl } from '../config'
 
 let syncing = false
 let listeners = []
@@ -18,7 +17,7 @@ function notify(status) {
 }
 
 async function rawRequest(url, options = {}) {
-  const res = await fetch(`${BASE}${url}`, {
+  const res = await fetch(`${getServerUrl()}/api${url}`, {
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
     ...options,
   })

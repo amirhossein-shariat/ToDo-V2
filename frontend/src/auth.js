@@ -1,3 +1,5 @@
+import { getServerUrl } from './config'
+
 const TOKEN_KEY = 'spark_auth_token'
 const PHONE_KEY = 'spark_auth_phone'
 
@@ -40,7 +42,7 @@ export function authHeaders() {
 }
 
 export async function login(phone, pin) {
-  const res = await fetch('/api/auth/login', {
+  const res = await fetch(`${getServerUrl()}/api/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ phone, pin }),
@@ -57,7 +59,7 @@ export async function logout() {
   const token = getToken()
   clearSession()
   if (token) {
-    fetch('/api/auth/logout', {
+    fetch(`${getServerUrl()}/api/auth/logout`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
     }).catch(() => {})

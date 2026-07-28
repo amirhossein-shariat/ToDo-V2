@@ -1,0 +1,5 @@
+{
+  "appId": "com.spark.todoapp",
+  "appName": "Spark",
+  "webDir": "dist"
+}
