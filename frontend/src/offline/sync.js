@@ -55,18 +55,9 @@ async function pullDelta() {
   const since = await getMeta('lastSync')
   const data = await rawRequest(`/sync${since ? `?since=${encodeURIComponent(since)}` : ''}`)
 
-  for (const t of data.tasks) {
-    if (t.is_active) await put('tasks', t)
-    else await remove('tasks', t.id)
-  }
-  for (const g of data.goals) {
-    if (g.is_active) await put('goals', g)
-    else await remove('goals', g.id)
-  }
-  for (const gt of data.goal_tasks) {
-    if (gt.is_active) await put('goal_tasks', gt)
-    else await remove('goal_tasks', gt.id)
-  }
+  for (const t of data.tasks) await put('tasks', t)
+  for (const g of data.goals) await put('goals', g)
+  for (const gt of data.goal_tasks) await put('goal_tasks', gt)
   for (const c of data.completions) await put('completions', c)
   for (const s of data.skips) await put('skips', s)
 

@@ -17,6 +17,7 @@ backend/*.db
 frontend/dev-dist/
 
 frontend/public/spark.apk
+Spark.apk
 
 # Android (Capacitor)
 frontend/android/local.properties

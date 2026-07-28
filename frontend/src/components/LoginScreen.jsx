@@ -64,7 +64,7 @@ export default function LoginScreen({ onSuccess }) {
             value={serverUrl}
             onChange={(e) => setServerUrlInput(e.target.value)}
             placeholder="آدرس سرور — مثلاً http://192.168.1.10:8000"
-            className="mb-3 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-center text-sm text-white placeholder-white/40 outline-none focus:border-sky-400"
+            className="mb-3 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-center text-base text-white placeholder-white/40 outline-none focus:border-sky-400"
           />
         )}
 
@@ -74,7 +74,7 @@ export default function LoginScreen({ onSuccess }) {
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           placeholder="شماره تلفن"
-          className="mb-3 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-center text-white placeholder-white/40 outline-none focus:border-sky-400"
+          className="mb-3 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-center text-base text-white placeholder-white/40 outline-none focus:border-sky-400"
         />
         <input
           type="password"
@@ -83,7 +83,7 @@ export default function LoginScreen({ onSuccess }) {
           value={pin}
           onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
           placeholder="رمز ۴ رقمی"
-          className="mb-4 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-center text-2xl tracking-[0.5em] text-white placeholder-white/40 outline-none focus:border-sky-400"
+          className="mb-4 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-center text-base tracking-[0.5em] text-white placeholder-white/40 outline-none focus:border-sky-400"
         />
 
         {error && <p className="mb-3 text-sm text-red-300">{error}</p>}
