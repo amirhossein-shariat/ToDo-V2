@@ -4,6 +4,7 @@ import { format, addDays } from 'date-fns'
 import TaskItem from './TaskItem'
 import TaskModal from './TaskModal'
 import DateNav from './DateNav'
+import DurationModal from './DurationModal'
 import { getDailyTasks, createTask, updateTask, deleteTask, toggleTaskCompletion } from '../api'
 import { WEEK_DAYS } from '../constants'
 import { formatJalali } from '../utils/jalali'
@@ -22,6 +23,7 @@ export default function DailyView({ currentDate, setCurrentDate }) {
   const [error, setError] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
+  const [durationTask, setDurationTask] = useState(null)
 
   const dateStr = toDateStr(currentDate)
 
@@ -65,6 +67,12 @@ export default function DailyView({ currentDate, setCurrentDate }) {
   const handleAdd = () => {
     setEditingTask(null)
     setModalOpen(true)
+  }
+
+  const handleDurationSubmit = async (endDate) => {
+    await updateTask(durationTask.id, { end_date: endDate })
+    setDurationTask(null)
+    loadTasks()
   }
 
   const handleSubmit = async (payload) => {
@@ -128,6 +136,7 @@ export default function DailyView({ currentDate, setCurrentDate }) {
               onToggle={handleToggle}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              onDuration={setDurationTask}
             />
           ))}
         </AnimatePresence>
@@ -147,6 +156,13 @@ export default function DailyView({ currentDate, setCurrentDate }) {
         onSubmit={handleSubmit}
         initialTask={editingTask}
         defaultDate={dateStr}
+      />
+
+      <DurationModal
+        open={!!durationTask}
+        onClose={() => setDurationTask(null)}
+        task={durationTask}
+        onSubmit={handleDurationSubmit}
       />
     </div>
   )

@@ -72,3 +72,7 @@ export function addGoalTaskToDaily(taskId, date) {
 export function getTaskStreaks() {
   return request('/tasks/streaks')
 }
+
+export function getTagStats(start, end) {
+  return request(`/tasks/tag-stats?start=${start}&end=${end}`)
+}

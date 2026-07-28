@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { WEEK_DAYS } from '../constants'
+import { format, addDays } from 'date-fns'
+import { WEEK_DAYS, TAGS, DURATION_PRESETS } from '../constants'
 
 const emptyForm = {
   title: '',
@@ -8,6 +9,8 @@ const emptyForm = {
   recurrence_type: 'daily',
   recurrence_days: [],
   specific_date: '',
+  tag: '',
+  end_date: '',
 }
 
 export default function TaskModal({ open, onClose, onSubmit, initialTask, defaultDate }) {
@@ -23,6 +26,8 @@ export default function TaskModal({ open, onClose, onSubmit, initialTask, defaul
         recurrence_type: initialTask.recurrence_type,
         recurrence_days: initialTask.recurrence_days || [],
         specific_date: initialTask.specific_date || defaultDate,
+        tag: initialTask.tag || '',
+        end_date: initialTask.end_date || '',
       })
     } else {
       setForm({ ...emptyForm, specific_date: defaultDate, recurrence_days: [] })
@@ -60,9 +65,13 @@ export default function TaskModal({ open, onClose, onSubmit, initialTask, defaul
       recurrence_type: form.recurrence_type,
       recurrence_days: form.recurrence_type === 'weekly_days' ? form.recurrence_days : null,
       specific_date: form.recurrence_type === 'once' ? form.specific_date : null,
+      tag: form.tag || null,
+      end_date: form.recurrence_type !== 'once' ? form.end_date || null : null,
     }
     onSubmit(payload)
   }
+
+  const isRecurring = form.recurrence_type !== 'once'
 
   return (
     <AnimatePresence>
@@ -81,7 +90,7 @@ export default function TaskModal({ open, onClose, onSubmit, initialTask, defaul
             transition={{ duration: 0.2 }}
             onClick={(e) => e.stopPropagation()}
             onSubmit={handleSubmit}
-            className="w-full max-w-sm rounded-3xl border border-white/20 bg-white/10 p-6 text-right shadow-2xl backdrop-blur-2xl"
+            className="max-h-[85vh] w-full max-w-sm overflow-y-auto rounded-3xl border border-white/20 bg-white/10 p-6 text-right shadow-2xl backdrop-blur-2xl"
           >
             <h2 className="mb-4 text-lg font-bold text-white">
               {initialTask ? 'ویرایش تسک' : 'تسک جدید'}
@@ -138,6 +147,72 @@ export default function TaskModal({ open, onClose, onSubmit, initialTask, defaul
                 className="mb-3 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-white outline-none focus:border-sky-400 [color-scheme:dark]"
               />
             )}
+
+            {isRecurring && !initialTask && (
+              <div className="mb-3">
+                <p className="mb-1.5 text-xs text-white/50">مدت تکرار</p>
+                <div className="mb-2 grid grid-cols-2 gap-2">
+                  {DURATION_PRESETS.map((p) => (
+                    <button
+                      key={p.label}
+                      type="button"
+                      onClick={() =>
+                        setForm((f) => ({
+                          ...f,
+                          end_date: format(addDays(new Date(), p.days), 'yyyy-MM-dd'),
+                        }))
+                      }
+                      className={`rounded-lg py-1.5 text-xs transition-colors ${
+                        form.end_date === format(addDays(new Date(), p.days), 'yyyy-MM-dd')
+                          ? 'bg-sky-500 text-white'
+                          : 'bg-white/10 text-white/60 hover:bg-white/20'
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, end_date: '' }))}
+                    className={`rounded-lg px-3 py-1.5 text-xs transition-colors ${
+                      !form.end_date
+                        ? 'bg-emerald-500 text-white'
+                        : 'bg-white/10 text-white/60 hover:bg-white/20'
+                    }`}
+                  >
+                    نامحدود
+                  </button>
+                  <input
+                    type="date"
+                    value={form.end_date}
+                    onChange={(e) => setForm((f) => ({ ...f, end_date: e.target.value }))}
+                    className="flex-1 rounded-lg border border-white/20 bg-white/10 px-2 py-1 text-xs text-white outline-none focus:border-sky-400 [color-scheme:dark]"
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="mb-3">
+              <p className="mb-1.5 text-xs text-white/50">برچسب (اختیاری)</p>
+              <div className="flex flex-wrap gap-2">
+                {TAGS.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, tag: f.tag === t ? '' : t }))}
+                    className={`rounded-lg px-3 py-1.5 text-xs transition-colors ${
+                      form.tag === t
+                        ? 'bg-sky-500 text-white'
+                        : 'bg-white/10 text-white/60 hover:bg-white/20'
+                    }`}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+            </div>
 
             <textarea
               value={form.description}

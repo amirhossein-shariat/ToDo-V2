@@ -6,7 +6,9 @@ def week_day_index(d: date) -> int:
     return (d.weekday() + 2) % 7
 
 
-def _is_applicable(task, d: date) -> bool:
+def is_applicable(task, d: date) -> bool:
+    if getattr(task, "end_date", None) and d > task.end_date:
+        return False
     if task.recurrence_type == "daily":
         return True
     if task.recurrence_type == "weekly_days":
@@ -25,14 +27,14 @@ def compute_streak(task, completed_dates: set, today: date) -> int:
 
     created_date = task.created_at.date() if task.created_at else today
     d = today
-    if _is_applicable(task, d) and d not in completed_dates:
+    if is_applicable(task, d) and d not in completed_dates:
         d -= timedelta(days=1)
 
     streak = 0
     for _ in range(730):
         if d < created_date:
             break
-        if _is_applicable(task, d):
+        if is_applicable(task, d):
             if d in completed_dates:
                 streak += 1
                 d -= timedelta(days=1)

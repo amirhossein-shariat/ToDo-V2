@@ -5,6 +5,8 @@ from pydantic import BaseModel, field_validator
 
 RecurrenceType = Literal["once", "daily", "weekly_days"]
 
+TAGS = ["کاری", "آموزشی", "شخصی", "سلامتی", "خانه", "مالی", "سرگرمی", "اجتماعی"]
+
 
 class TaskBase(BaseModel):
     title: str
@@ -12,6 +14,15 @@ class TaskBase(BaseModel):
     recurrence_type: RecurrenceType
     recurrence_days: Optional[List[int]] = None
     specific_date: Optional[date_type] = None
+    tag: Optional[str] = None
+    end_date: Optional[date_type] = None
+
+    @field_validator("tag")
+    @classmethod
+    def validate_tag(cls, v):
+        if v is not None and v not in TAGS:
+            raise ValueError(f"برچسب نامعتبر است. برچسب‌های مجاز: {', '.join(TAGS)}")
+        return v
 
     @field_validator("recurrence_days")
     @classmethod
@@ -41,6 +52,8 @@ class TaskUpdate(BaseModel):
     recurrence_type: Optional[RecurrenceType] = None
     recurrence_days: Optional[List[int]] = None
     specific_date: Optional[date_type] = None
+    tag: Optional[str] = None
+    end_date: Optional[date_type] = None
     is_active: Optional[bool] = None
 
 
@@ -91,6 +104,11 @@ class GoalCreate(BaseModel):
 class GoalUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
+
+
+class TagStat(BaseModel):
+    tag: Optional[str]
+    count: int
 
 
 class TaskStreakOut(BaseModel):

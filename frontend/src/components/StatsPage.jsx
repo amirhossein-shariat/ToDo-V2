@@ -15,6 +15,7 @@ import { getRangeSummary, getTaskStreaks, getGoals } from '../api'
 import { WEEK_DAYS } from '../constants'
 import { gregorianToJalali, jalaliToGregorian, jalaliMonthLength } from '../utils/jalali'
 import ReportModal from './ReportModal'
+import TagBreakdownWidget from './TagBreakdownWidget'
 
 function toDateStr(d) {
   return format(d, 'yyyy-MM-dd')
@@ -177,6 +178,8 @@ export default function StatsPage() {
           </div>
         </div>
       </div>
+
+      <TagBreakdownWidget />
 
       {streaks.length > 0 && (
         <div className="rounded-2xl border border-white/15 bg-white/5 p-4 backdrop-blur-lg">

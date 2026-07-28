@@ -5,19 +5,17 @@ from sqlalchemy.orm import Session
 
 from app import models, schemas
 from app.database import get_db
-from app.utils import week_day_index, compute_streak
+from app.utils import compute_streak, is_applicable
 
 router = APIRouter(prefix="/api/tasks", tags=["tasks"])
 
 
 def _applicable_tasks(tasks, target_date: date_type):
-    idx = week_day_index(target_date)
     result = []
     for task in tasks:
-        if task.recurrence_type == "daily":
-            result.append(task)
-        elif task.recurrence_type == "weekly_days" and idx in (task.recurrence_days or []):
-            result.append(task)
+        if task.recurrence_type in ("daily", "weekly_days"):
+            if is_applicable(task, target_date):
+                result.append(task)
         elif task.recurrence_type == "once" and task.specific_date == target_date:
             result.append(task)
     return result
@@ -59,6 +57,8 @@ def list_daily_tasks(date: date_type = Query(...), db: Session = Depends(get_db)
             recurrence_type=t.recurrence_type,
             recurrence_days=t.recurrence_days,
             specific_date=t.specific_date,
+            tag=t.tag,
+            end_date=t.end_date,
             is_active=t.is_active,
             goal_task_id=t.goal_task_id,
             completed=t.id in completions,
@@ -127,6 +127,31 @@ def list_range_summary(
     return summaries
 
 
+@router.get("/tag-stats", response_model=list[schemas.TagStat])
+def tag_stats(
+    start: date_type = Query(...), end: date_type = Query(...), db: Session = Depends(get_db)
+):
+    if end < start:
+        raise HTTPException(status_code=400, detail="تاریخ پایان نمی‌تواند قبل از شروع باشد")
+
+    rows = (
+        db.query(models.Task.tag, models.TaskCompletion.task_id)
+        .join(models.TaskCompletion, models.TaskCompletion.task_id == models.Task.id)
+        .filter(
+            models.TaskCompletion.date >= start,
+            models.TaskCompletion.date <= end,
+            models.TaskCompletion.completed.is_(True),
+        )
+        .all()
+    )
+
+    counts: dict = {}
+    for tag, _task_id in rows:
+        counts[tag] = counts.get(tag, 0) + 1
+
+    return [schemas.TagStat(tag=tag, count=count) for tag, count in counts.items()]
+
+
 @router.post("", response_model=schemas.TaskOut, status_code=201)
 def create_task(payload: schemas.TaskCreate, db: Session = Depends(get_db)):
     task = models.Task(**payload.model_dump())
@@ -193,6 +218,8 @@ def toggle_completion(task_id: int, date: date_type = Query(...), db: Session = 
         recurrence_type=task.recurrence_type,
         recurrence_days=task.recurrence_days,
         specific_date=task.specific_date,
+        tag=task.tag,
+        end_date=task.end_date,
         is_active=task.is_active,
         goal_task_id=task.goal_task_id,
         completed=completed,

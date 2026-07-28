@@ -14,12 +14,19 @@ with engine.connect() as conn:
     if "goal_task_id" not in existing_columns:
         conn.execute(text("ALTER TABLE tasks ADD COLUMN goal_task_id INTEGER"))
         conn.commit()
+    if "tag" not in existing_columns:
+        conn.execute(text("ALTER TABLE tasks ADD COLUMN tag VARCHAR(30)"))
+        conn.commit()
+    if "end_date" not in existing_columns:
+        conn.execute(text("ALTER TABLE tasks ADD COLUMN end_date DATE"))
+        conn.commit()
 
 app = FastAPI(title="TodoApp API")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origin_regex=r"http://(10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}):5173",
     allow_methods=["*"],
     allow_headers=["*"],
 )

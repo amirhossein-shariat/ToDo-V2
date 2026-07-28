@@ -33,6 +33,11 @@ class Task(Base):
     # اگر این تسک از یک زیرتسک هدف ساخته شده باشد
     goal_task_id = Column(Integer, ForeignKey("goal_tasks.id"), nullable=True)
 
+    # برچسب ثابت (کاری، آموزشی و ...)
+    tag = Column(String(30), nullable=True)
+    # تاریخ پایان تکرار برای daily/weekly_days — null یعنی نامحدود
+    end_date = Column(Date, nullable=True)
+
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 

@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { format } from 'date-fns'
 import { createGoalTask, updateGoalTask, deleteGoalTask, addGoalTaskToDaily } from '../api'
+import DatePickerModal from './DatePickerModal'
 
 export default function GoalDetail({ goal, onBack, onChanged, onEdit, onDelete }) {
   const [newTitle, setNewTitle] = useState('')
   const [busy, setBusy] = useState(false)
   const [addedId, setAddedId] = useState(null)
+  const [pickerTask, setPickerTask] = useState(null)
 
   const total = goal.tasks.length
   const done = goal.tasks.filter((t) => t.is_done).length
@@ -35,8 +36,10 @@ export default function GoalDetail({ goal, onBack, onChanged, onEdit, onDelete }
     onChanged()
   }
 
-  const handleAddToDaily = async (task) => {
-    await addGoalTaskToDaily(task.id, format(new Date(), 'yyyy-MM-dd'))
+  const handleDateSelected = async (dateStr) => {
+    const task = pickerTask
+    setPickerTask(null)
+    await addGoalTaskToDaily(task.id, dateStr)
     setAddedId(task.id)
     setTimeout(() => setAddedId((id) => (id === task.id ? null : id)), 1800)
   }
@@ -136,7 +139,7 @@ export default function GoalDetail({ goal, onBack, onChanged, onEdit, onDelete }
                 {task.title}
               </p>
               <button
-                onClick={() => handleAddToDaily(task)}
+                onClick={() => setPickerTask(task)}
                 disabled={addedId === task.id}
                 className={`rounded-lg p-1.5 transition-colors ${
                   addedId === task.id
@@ -170,6 +173,12 @@ export default function GoalDetail({ goal, onBack, onChanged, onEdit, onDelete }
           ))}
         </AnimatePresence>
       </div>
+
+      <DatePickerModal
+        open={!!pickerTask}
+        onClose={() => setPickerTask(null)}
+        onSelect={handleDateSelected}
+      />
     </div>
   )
 }
