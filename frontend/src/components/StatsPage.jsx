@@ -193,7 +193,7 @@ export default function StatsPage() {
             <Legend wrapperStyle={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }} />
             <Bar yAxisId="count" dataKey="total" name="کل تسک‌ها" fill="rgba(255,255,255,0.2)" radius={[6, 6, 0, 0]} />
             <Bar yAxisId="count" dataKey="done" name="انجام‌شده" fill="#38bdf8" radius={[6, 6, 0, 0]} />
-            <Line yAxisId="percent" type="monotone" dataKey="percent" name="میزان تکمیل" stroke="#34ffb0" strokeWidth={2.5} dot={{ r: 4, fill: '#34ffb0' }} />
+            <Bar yAxisId="percent" dataKey="percent" name="میزان تکمیل" fill="#34ffb0" radius={[6, 6, 0, 0]} />
           </ComposedChart>
         </ResponsiveContainer>
       </div>
