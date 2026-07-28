@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { motion } from 'framer-motion'
 import { format, startOfWeek, addDays } from 'date-fns'
 import {
   ResponsiveContainer,
@@ -243,12 +244,28 @@ export default function StatsPage() {
         </div>
       )}
 
-      <button
+      <motion.button
         onClick={handleOpenReport}
-        className="w-full rounded-2xl border border-white/15 bg-sky-500/20 p-4 font-medium text-sky-200 backdrop-blur-lg hover:bg-sky-500/30"
+        whileTap={{ scale: 0.97 }}
+        whileHover={{ scale: 1.01 }}
+        className="flex w-full items-center justify-center gap-2 rounded-2xl border border-sky-400/20 bg-sky-500/10 py-3.5 text-sm font-medium text-sky-200 backdrop-blur-lg transition-colors hover:bg-sky-500/20"
       >
-        📄 دانلود گزارش کامل (PDF / Word)
-      </button>
+        <svg
+          width="17"
+          height="17"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M12 3v12" />
+          <path d="M7 10l5 5 5-5" />
+          <path d="M5 20h14" />
+        </svg>
+        دانلود گزارش کامل
+      </motion.button>
 
       <ReportModal open={reportOpen} onClose={() => setReportOpen(false)} data={reportData} />
     </div>
