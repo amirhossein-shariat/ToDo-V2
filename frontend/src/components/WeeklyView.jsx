@@ -3,6 +3,8 @@ import { motion } from 'framer-motion'
 import { format, startOfWeek, addDays, isSameDay } from 'date-fns'
 import { getRangeSummary } from '../api'
 import { WEEK_DAYS } from '../constants'
+import { formatJalali } from '../utils/jalali'
+import DateNav from './DateNav'
 
 function toDateStr(d) {
   return format(d, 'yyyy-MM-dd')
@@ -30,23 +32,12 @@ export default function WeeklyView({ currentDate, setCurrentDate, onSelectDay })
 
   return (
     <div className="flex flex-1 flex-col">
-      <div className="mb-4 flex items-center justify-between rounded-2xl border border-white/15 bg-white/5 p-3 backdrop-blur-lg">
-        <button
-          onClick={() => setCurrentDate((d) => addDays(d, -7))}
-          className="rounded-lg p-2 text-white/60 hover:bg-white/10"
-        >
-          ◀
-        </button>
-        <p className="font-medium text-white">
-          {format(weekStart, 'yyyy/MM/dd')} تا {format(addDays(weekStart, 6), 'yyyy/MM/dd')}
-        </p>
-        <button
-          onClick={() => setCurrentDate((d) => addDays(d, 7))}
-          className="rounded-lg p-2 text-white/60 hover:bg-white/10"
-        >
-          ▶
-        </button>
-      </div>
+      <DateNav
+        animKey={toDateStr(weekStart)}
+        label={`${formatJalali(weekStart)} تا ${formatJalali(addDays(weekStart, 6))}`}
+        onPrev={() => setCurrentDate((d) => addDays(d, -7))}
+        onNext={() => setCurrentDate((d) => addDays(d, 7))}
+      />
 
       <div className="grid flex-1 grid-cols-1 gap-3 pb-24 sm:grid-cols-2">
         {days.map((day, idx) => {
@@ -89,7 +80,7 @@ export default function WeeklyView({ currentDate, setCurrentDate, onSelectDay })
               </div>
               <div className="min-w-0 flex-1">
                 <p className="font-medium text-white">{WEEK_DAYS[idx]}</p>
-                <p className="text-xs text-white/50">{format(day, 'yyyy/MM/dd')}</p>
+                <p className="text-xs text-white/50">{formatJalali(day)}</p>
               </div>
             </motion.button>
           )

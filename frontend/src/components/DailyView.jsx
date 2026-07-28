@@ -3,8 +3,10 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { format, addDays } from 'date-fns'
 import TaskItem from './TaskItem'
 import TaskModal from './TaskModal'
+import DateNav from './DateNav'
 import { getDailyTasks, createTask, updateTask, deleteTask, toggleTaskCompletion } from '../api'
 import { WEEK_DAYS } from '../constants'
+import { formatJalali } from '../utils/jalali'
 
 function toDateStr(d) {
   return format(d, 'yyyy-MM-dd')
@@ -84,33 +86,22 @@ export default function DailyView({ currentDate, setCurrentDate }) {
 
   return (
     <div className="flex flex-1 flex-col">
-      <div className="mb-4 flex items-center justify-between rounded-2xl border border-white/15 bg-white/5 p-3 backdrop-blur-lg">
-        <button
-          onClick={() => setCurrentDate((d) => addDays(d, -1))}
-          className="rounded-lg p-2 text-white/60 hover:bg-white/10"
-        >
-          ◀
-        </button>
-        <div className="text-center">
-          <p className="font-medium text-white">
-            {WEEK_DAYS[weekdayIndex(currentDate)]} {format(currentDate, 'yyyy/MM/dd')}
-          </p>
-          {!isToday && (
+      <DateNav
+        animKey={dateStr}
+        label={`${WEEK_DAYS[weekdayIndex(currentDate)]} ${formatJalali(currentDate)}`}
+        sublabel={
+          !isToday && (
             <button
               onClick={() => setCurrentDate(new Date())}
               className="text-xs text-sky-300 hover:underline"
             >
               برو به امروز
             </button>
-          )}
-        </div>
-        <button
-          onClick={() => setCurrentDate((d) => addDays(d, 1))}
-          className="rounded-lg p-2 text-white/60 hover:bg-white/10"
-        >
-          ▶
-        </button>
-      </div>
+          )
+        }
+        onPrev={() => setCurrentDate((d) => addDays(d, -1))}
+        onNext={() => setCurrentDate((d) => addDays(d, 1))}
+      />
 
       {tasks.length > 0 && (
         <div className="mb-4 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
