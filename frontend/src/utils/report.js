@@ -1,4 +1,5 @@
 import { formatJalali } from './jalali'
+import { REPORT_LOGO_BASE64 } from './reportLogo'
 
 function esc(str) {
   return String(str ?? '').replace(/[&<>"']/g, (c) => ({
@@ -49,7 +50,10 @@ export function buildReportHtml({ weekData, weeklyTrend, streaks, goals }) {
 
   return `
 <div dir="rtl" lang="fa" style="font-family: Tahoma, Arial, sans-serif; color:#111; background:#fff; padding:24px; max-width:700px; margin:0 auto;">
-  <h1 style="font-size:20px; margin-bottom:4px;">گزارش TodoApp</h1>
+  <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;">
+    <img src="data:image/png;base64,${REPORT_LOGO_BASE64}" alt="Spark" width="40" height="40" style="display:block;" />
+    <h1 style="font-size:20px; margin:0;">گزارش Spark</h1>
+  </div>
   <p style="color:#666; margin-top:0; font-size:12px;">تاریخ تولید گزارش: ${generatedAt}</p>
 
   <h2 style="font-size:16px; border-bottom:1px solid #ccc; padding-bottom:4px;">وضعیت روزهای هفته جاری</h2>
@@ -75,7 +79,7 @@ export function buildReportHtml({ weekData, weeklyTrend, streaks, goals }) {
 </div>`
 }
 
-export function downloadWordReport(html, filename = 'گزارش-todoapp.doc') {
+export function downloadWordReport(html, filename = 'گزارش-Spark.doc') {
   const fullHtml = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"></head><body>${html}</body></html>`
   const blob = new Blob(['﻿', fullHtml], { type: 'application/msword' })
   const url = URL.createObjectURL(blob)
