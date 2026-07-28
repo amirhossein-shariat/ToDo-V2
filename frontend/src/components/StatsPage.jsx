@@ -18,6 +18,7 @@ import { WEEK_DAYS } from '../constants'
 import { gregorianToJalali, jalaliToGregorian, jalaliMonthLength } from '../utils/jalali'
 import ReportModal from './ReportModal'
 import TagBreakdownWidget from './TagBreakdownWidget'
+import GoalsStatsWidget from './GoalsStatsWidget'
 
 function toDateStr(d) {
   return format(d, 'yyyy-MM-dd')
@@ -232,6 +233,8 @@ export default function StatsPage() {
       </div>
 
       <TagBreakdownWidget />
+
+      <GoalsStatsWidget />
 
       {streaks.length > 0 && (
         <div className="rounded-2xl border border-white/15 bg-white/5 p-4 backdrop-blur-lg">
