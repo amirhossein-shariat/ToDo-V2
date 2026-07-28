@@ -9,7 +9,15 @@ router = APIRouter(prefix="/api/goals", tags=["goals"])
 
 @router.get("", response_model=list[schemas.GoalOut])
 def list_goals(db: Session = Depends(get_db)):
-    return db.query(models.Goal).options(joinedload(models.Goal.tasks)).all()
+    goals = (
+        db.query(models.Goal)
+        .options(joinedload(models.Goal.tasks))
+        .filter(models.Goal.is_active.is_(True))
+        .all()
+    )
+    for goal in goals:
+        goal.tasks = [t for t in goal.tasks if t.is_active]
+    return goals
 
 
 @router.post("", response_model=schemas.GoalOut, status_code=201)
@@ -38,7 +46,9 @@ def delete_goal(goal_id: int, db: Session = Depends(get_db)):
     goal = db.query(models.Goal).filter(models.Goal.id == goal_id).first()
     if not goal:
         raise HTTPException(status_code=404, detail="هدف پیدا نشد")
-    db.delete(goal)
+    goal.is_active = False
+    for task in goal.tasks:
+        task.is_active = False
     db.commit()
 
 
@@ -71,5 +81,5 @@ def delete_goal_task(task_id: int, db: Session = Depends(get_db)):
     task = db.query(models.GoalTask).filter(models.GoalTask.id == task_id).first()
     if not task:
         raise HTTPException(status_code=404, detail="زیرتسک پیدا نشد")
-    db.delete(task)
+    task.is_active = False
     db.commit()

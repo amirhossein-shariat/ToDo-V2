@@ -6,6 +6,7 @@ import WeeklyView from './components/WeeklyView'
 import MonthlyView from './components/MonthlyView'
 import GoalsPage from './components/GoalsPage'
 import StatsPage from './components/StatsPage'
+import SyncBadge from './components/SyncBadge'
 
 export default function App() {
   const [section, setSection] = useState('tasks')
@@ -29,6 +30,8 @@ export default function App() {
         </h1>
         <p className="text-sm text-white/50">Manage Tasks &amp; Goals</p>
       </header>
+
+      <SyncBadge />
 
       <SectionTabs section={section} setSection={setSection} />
 

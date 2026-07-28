@@ -178,7 +178,7 @@ def delete_task(task_id: int, db: Session = Depends(get_db)):
     task = db.query(models.Task).filter(models.Task.id == task_id).first()
     if not task:
         raise HTTPException(status_code=404, detail="تسک پیدا نشد")
-    db.delete(task)
+    task.is_active = False
     db.commit()
 
 
@@ -191,9 +191,13 @@ def delete_task_occurrence(
     if not task:
         raise HTTPException(status_code=404, detail="تسک پیدا نشد")
 
-    db.query(models.TaskCompletion).filter(
-        models.TaskCompletion.task_id == task_id, models.TaskCompletion.date == date
-    ).delete()
+    completion = (
+        db.query(models.TaskCompletion)
+        .filter(models.TaskCompletion.task_id == task_id, models.TaskCompletion.date == date)
+        .first()
+    )
+    if completion:
+        completion.completed = False
 
     exists = (
         db.query(models.TaskSkip)
@@ -219,8 +223,8 @@ def toggle_completion(task_id: int, date: date_type = Query(...), db: Session = 
     )
 
     if completion:
-        db.delete(completion)
-        completed = False
+        completion.completed = not completion.completed
+        completed = completion.completed
     else:
         db.add(models.TaskCompletion(task_id=task_id, date=date, completed=True))
         completed = True

@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { getGoals, createGoal, updateGoal, deleteGoal } from '../api'
+import { onSyncStatus } from '../offline/sync'
 import GoalModal from './GoalModal'
 import GoalDetail from './GoalDetail'
 import { TAG_COLORS, TAG_COLOR_FALLBACK } from '../constants'
@@ -23,6 +24,12 @@ export default function GoalsPage() {
 
   useEffect(() => {
     loadGoals()
+  }, [loadGoals])
+
+  useEffect(() => {
+    return onSyncStatus((status) => {
+      if (status === 'synced' || status === 'partial') loadGoals()
+    })
   }, [loadGoals])
 
   const selectedGoal = goals.find((g) => g.id === selectedId)

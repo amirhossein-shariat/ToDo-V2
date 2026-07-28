@@ -40,6 +40,7 @@ class Task(Base):
 
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     completions = relationship(
         "TaskCompletion", back_populates="task", cascade="all, delete-orphan"
@@ -57,6 +58,7 @@ class TaskCompletion(Base):
     date = Column(Date, nullable=False, index=True)
     completed = Column(Boolean, default=True)
     completed_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     task = relationship("Task", back_populates="completions")
 
@@ -80,7 +82,9 @@ class Goal(Base):
     title = Column(String(200), nullable=False)
     description = Column(Text, nullable=True)
     tag = Column(String(30), nullable=True)
+    is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     tasks = relationship(
         "GoalTask", back_populates="goal", cascade="all, delete-orphan"
@@ -94,6 +98,8 @@ class GoalTask(Base):
     goal_id = Column(Integer, ForeignKey("goals.id"), nullable=False)
     title = Column(String(200), nullable=False)
     is_done = Column(Boolean, default=False)
+    is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     goal = relationship("Goal", back_populates="tasks")

@@ -13,6 +13,7 @@ import {
   deleteTaskOccurrence,
   toggleTaskCompletion,
 } from '../api'
+import { onSyncStatus } from '../offline/sync'
 import { WEEK_DAYS } from '../constants'
 import { formatJalali } from '../utils/jalali'
 
@@ -44,6 +45,12 @@ export default function DailyView({ currentDate, setCurrentDate }) {
 
   useEffect(() => {
     loadTasks()
+  }, [loadTasks])
+
+  useEffect(() => {
+    return onSyncStatus((status) => {
+      if (status === 'synced' || status === 'partial') loadTasks()
+    })
   }, [loadTasks])
 
   const handleToggle = async (task) => {
