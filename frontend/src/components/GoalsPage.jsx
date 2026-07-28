@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { getGoals, createGoal, updateGoal, deleteGoal } from '../api'
 import GoalModal from './GoalModal'
 import GoalDetail from './GoalDetail'
+import { TAG_COLORS, TAG_COLOR_FALLBACK } from '../constants'
 
 export default function GoalsPage() {
   const [goals, setGoals] = useState([])
@@ -85,6 +86,8 @@ export default function GoalsPage() {
             const total = goal.tasks.length
             const done = goal.tasks.filter((t) => t.is_done).length
             const ratio = total > 0 ? done / total : 0
+            const percent = total > 0 ? Math.round(ratio * 100) : 0
+            const tagColor = goal.tag ? TAG_COLORS[goal.tag] || TAG_COLOR_FALLBACK : null
             return (
               <motion.button
                 layout
@@ -96,11 +99,21 @@ export default function GoalsPage() {
                 onClick={() => setSelectedId(goal.id)}
                 className="w-full rounded-2xl border border-white/15 bg-white/5 p-4 text-right backdrop-blur-lg hover:bg-white/10"
               >
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="text-xs text-white/40">
-                    {done}/{total}
-                  </span>
+                <div className="mb-2 flex items-center justify-between gap-2">
                   <h3 className="font-medium text-white">{goal.title}</h3>
+                  <div className="flex shrink-0 items-center gap-2">
+                    {goal.tag && (
+                      <span
+                        className="rounded-full px-2 py-0.5 text-[10px] font-medium text-black/80"
+                        style={{ backgroundColor: tagColor }}
+                      >
+                        {goal.tag}
+                      </span>
+                    )}
+                    <span className="text-xs text-white/40">
+                      {percent}% ({done}/{total})
+                    </span>
+                  </div>
                 </div>
                 <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
                   <motion.div
