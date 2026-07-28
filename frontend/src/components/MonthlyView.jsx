@@ -73,7 +73,7 @@ export default function MonthlyView({ currentDate, setCurrentDate, onSelectDay }
           let glow = 'none'
           if (isGreen) {
             bg = 'linear-gradient(135deg, #34ffb0 0%, #10d98a 55%, #06b876 100%)'
-            glow = '0 0 14px rgba(16, 217, 138, 0.65)'
+            glow = '0 0 4px rgba(16, 217, 138, 0.45)'
           } else if (isRed) {
             bg = 'rgba(248, 113, 113, 0.55)'
           } else if (summary && summary.total > 0) {
