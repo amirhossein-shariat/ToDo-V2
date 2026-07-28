@@ -1,6 +1,7 @@
 const SECTIONS = [
   { key: 'tasks', label: 'کارها' },
   { key: 'goals', label: 'اهداف' },
+  { key: 'stats', label: 'آمار' },
 ]
 
 export default function SectionTabs({ section, setSection }) {

@@ -5,6 +5,7 @@ import DailyView from './components/DailyView'
 import WeeklyView from './components/WeeklyView'
 import MonthlyView from './components/MonthlyView'
 import GoalsPage from './components/GoalsPage'
+import StatsPage from './components/StatsPage'
 
 export default function App() {
   const [section, setSection] = useState('tasks')
@@ -49,6 +50,7 @@ export default function App() {
       )}
 
       {section === 'goals' && <GoalsPage />}
+      {section === 'stats' && <StatsPage />}
     </div>
   )
 }
