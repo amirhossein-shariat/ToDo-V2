@@ -31,6 +31,29 @@ def list_daily_tasks(date: date_type = Query(...), db: Session = Depends(get_db)
     tasks = db.query(models.Task).filter(models.Task.is_active.is_(True)).all()
     applicable = _applicable_tasks(tasks, date)
 
+    today = date_type.today()
+    overdue_ids = set()
+    if date == today:
+        completed_once_ids = {
+            c.task_id
+            for c in db.query(models.TaskCompletion.task_id).join(
+                models.Task, models.Task.id == models.TaskCompletion.task_id
+            ).filter(
+                models.Task.recurrence_type == "once",
+                models.TaskCompletion.completed.is_(True),
+            )
+        }
+        overdue_tasks = [
+            t
+            for t in tasks
+            if t.recurrence_type == "once"
+            and t.specific_date is not None
+            and t.specific_date < today
+            and t.id not in completed_once_ids
+        ]
+        overdue_ids = {t.id for t in overdue_tasks}
+        applicable = applicable + overdue_tasks
+
     completions = {
         c.task_id
         for c in db.query(models.TaskCompletion).filter(
@@ -47,8 +70,6 @@ def list_daily_tasks(date: date_type = Query(...), db: Session = Depends(get_db)
         ):
             completions_by_task.setdefault(row.task_id, set()).add(row.date)
 
-    today = date_type.today()
-
     return [
         schemas.DailyTaskOut(
             id=t.id,
@@ -63,6 +84,7 @@ def list_daily_tasks(date: date_type = Query(...), db: Session = Depends(get_db)
             goal_task_id=t.goal_task_id,
             completed=t.id in completions,
             streak=compute_streak(t, completions_by_task.get(t.id, set()), today),
+            is_overdue=t.id in overdue_ids,
         )
         for t in applicable
     ]
@@ -121,7 +143,17 @@ def list_range_summary(
         applicable = _applicable_tasks(tasks, current)
         done_ids = completed_counts.get(current, set())
         done = sum(1 for t in applicable if t.id in done_ids)
-        summaries.append(schemas.DaySummary(date=current, total=len(applicable), done=done))
+        has_incomplete_once = any(
+            t.recurrence_type == "once" and t.id not in done_ids for t in applicable
+        )
+        summaries.append(
+            schemas.DaySummary(
+                date=current,
+                total=len(applicable),
+                done=done,
+                has_incomplete_once=has_incomplete_once,
+            )
+        )
         current += timedelta(days=1)
 
     return summaries

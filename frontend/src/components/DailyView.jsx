@@ -58,7 +58,7 @@ export default function DailyView({ currentDate, setCurrentDate }) {
       prev.map((t) => (t.id === task.id ? { ...t, completed: !t.completed } : t)),
     )
     try {
-      await toggleTaskCompletion(task.id, dateStr)
+      await toggleTaskCompletion(task.id, task.specific_date || dateStr)
     } catch {
       loadTasks()
     }

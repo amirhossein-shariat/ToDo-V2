@@ -12,7 +12,9 @@ export default function TaskItem({ task, onToggle, onEdit, onDelete, onDuration,
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, x: 20 }}
       transition={{ duration: 0.25, ease: 'easeOut' }}
-      className="flex items-center gap-3 rounded-2xl border border-white/15 bg-white/5 p-4 backdrop-blur-lg"
+      className={`flex items-center gap-3 rounded-2xl border p-4 backdrop-blur-lg ${
+        task.is_overdue ? 'border-red-400/50 bg-red-500/5' : 'border-white/15 bg-white/5'
+      }`}
     >
       <motion.button
         whileTap={{ scale: 0.85 }}
@@ -47,7 +49,13 @@ export default function TaskItem({ task, onToggle, onEdit, onDelete, onDuration,
           {task.title}
         </p>
         <p className="flex flex-wrap items-center gap-1.5 text-xs text-white/40">
-          <span>{RECURRENCE_LABELS[task.recurrence_type]}</span>
+          {task.is_overdue ? (
+            <span className="rounded-full bg-red-500/20 px-2 py-0.5 text-[10px] font-medium text-red-300">
+              دیرکرد از {formatJalali(new Date(task.specific_date))}
+            </span>
+          ) : (
+            <span>{RECURRENCE_LABELS[task.recurrence_type]}</span>
+          )}
           {isRecurring && (
             <span>{task.end_date ? `تا ${formatJalali(new Date(task.end_date))}` : 'نامحدود'}</span>
           )}

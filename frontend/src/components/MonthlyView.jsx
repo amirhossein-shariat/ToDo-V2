@@ -63,15 +63,25 @@ export default function MonthlyView({ currentDate, setCurrentDate, onSelectDay }
           const dayJalali = gregorianToJalali(day)
           const inMonth = dayJalali.jy === jy && dayJalali.jm === jm
           const isToday = isSameDay(day, today)
+          const isPast = day < today && !isToday
+
+          const fullyDone = summary && summary.total > 0 && summary.done === summary.total
+          const isGreen = (isPast || isToday) && fullyDone
+          const isRed = isPast && summary?.has_incomplete_once
+
+          let ringClass = ''
+          if (isGreen) ringClass = 'ring-2 ring-emerald-400'
+          else if (isRed) ringClass = 'ring-2 ring-red-400'
+          else if (isToday) ringClass = 'ring-1 ring-sky-400'
 
           return (
             <motion.button
               key={key}
               onClick={() => onSelectDay(day)}
               whileTap={{ scale: 0.9 }}
-              className={`aspect-square rounded-lg text-xs font-medium transition-colors ${
-                isToday ? 'ring-1 ring-sky-400' : ''
-              } ${inMonth ? 'text-white' : 'text-white/25'}`}
+              className={`aspect-square rounded-lg text-xs font-medium transition-colors ${ringClass} ${
+                inMonth ? 'text-white' : 'text-white/25'
+              }`}
               style={{
                 backgroundColor:
                   summary && summary.total > 0

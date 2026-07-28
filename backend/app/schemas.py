@@ -73,12 +73,14 @@ class TaskOut(TaskBase):
 class DailyTaskOut(TaskOut):
     completed: bool
     streak: int = 0
+    is_overdue: bool = False
 
 
 class DaySummary(BaseModel):
     date: date_type
     total: int
     done: int
+    has_incomplete_once: bool = False
 
 
 class GoalTaskCreate(BaseModel):

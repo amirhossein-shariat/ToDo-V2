@@ -24,8 +24,28 @@ export async function getDailyTasks(date) {
     getAll('skips'),
   ])
   const skipSet = new Set(skips.map((s) => `${s.task_id}_${s.date}`))
-  const applicable = tasks.filter((t) => t.is_active && isApplicable(t, date, skipSet))
+  const activeTasks = tasks.filter((t) => t.is_active)
+  const applicable = activeTasks.filter((t) => isApplicable(t, date, skipSet))
   const today = todayStr()
+
+  const overdueIds = new Set()
+  if (date === today) {
+    const completedOnceIds = new Set(
+      completions
+        .filter((c) => c.completed)
+        .map((c) => c.task_id)
+        .filter((id) => activeTasks.some((t) => t.id === id && t.recurrence_type === 'once')),
+    )
+    const overdueTasks = activeTasks.filter(
+      (t) =>
+        t.recurrence_type === 'once' &&
+        t.specific_date &&
+        t.specific_date < today &&
+        !completedOnceIds.has(t.id),
+    )
+    for (const t of overdueTasks) overdueIds.add(t.id)
+    applicable.push(...overdueTasks)
+  }
 
   return applicable.map((t) => {
     const taskCompletions = completions.filter((c) => c.task_id === t.id && c.completed)
@@ -34,6 +54,7 @@ export async function getDailyTasks(date) {
       ...t,
       completed: completedDates.has(date),
       streak: computeStreak(t, completedDates, skipSet, today),
+      is_overdue: overdueIds.has(t.id),
     }
   })
 }
@@ -60,7 +81,10 @@ export async function getRangeSummary(start, end) {
     const applicable = activeTasks.filter((t) => isApplicable(t, cur, skipSet))
     const doneSet = completedByDate[cur] || new Set()
     const done = applicable.filter((t) => doneSet.has(t.id)).length
-    result.push({ date: cur, total: applicable.length, done })
+    const hasIncompleteOnce = applicable.some(
+      (t) => t.recurrence_type === 'once' && !doneSet.has(t.id),
+    )
+    result.push({ date: cur, total: applicable.length, done, has_incomplete_once: hasIncompleteOnce })
     cur = addDays(cur, 1)
   }
   return result
