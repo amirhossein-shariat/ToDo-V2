@@ -19,9 +19,15 @@ export default function App() {
 
   return (
     <div className="mx-auto flex min-h-screen max-w-lg flex-col p-4 sm:p-6">
-      <header className="mb-4 text-center">
-        <h1 className="text-2xl font-bold text-white">TodoApp</h1>
-        <p className="text-sm text-white/50">مدیریت کارها و اهداف</p>
+      <header className="mb-4 flex flex-col items-center gap-1 text-center" dir="ltr">
+        <img src="/logo.png" alt="Spark" className="h-16 w-16" />
+        <h1
+          className="text-2xl font-extrabold text-sky-300"
+          style={{ fontFamily: 'var(--font-brand)' }}
+        >
+          Spark
+        </h1>
+        <p className="text-sm text-white/50">Manage Tasks &amp; Goals</p>
       </header>
 
       <SectionTabs section={section} setSection={setSection} />
