@@ -17,6 +17,10 @@ export function getDailyTasks(date) {
   return request(`/tasks/daily?date=${date}`)
 }
 
+export function getRangeSummary(start, end) {
+  return request(`/tasks/range?start=${start}&end=${end}`)
+}
+
 export function createTask(payload) {
   return request('/tasks', { method: 'POST', body: JSON.stringify(payload) })
 }

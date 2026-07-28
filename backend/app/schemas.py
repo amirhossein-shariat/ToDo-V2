@@ -54,3 +54,9 @@ class TaskOut(TaskBase):
 
 class DailyTaskOut(TaskOut):
     completed: bool
+
+
+class DaySummary(BaseModel):
+    date: date_type
+    total: int
+    done: int

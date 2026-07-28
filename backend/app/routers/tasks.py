@@ -1,4 +1,4 @@
-from datetime import date as date_type
+from datetime import date as date_type, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
@@ -10,6 +10,19 @@ from app.utils import week_day_index
 router = APIRouter(prefix="/api/tasks", tags=["tasks"])
 
 
+def _applicable_tasks(tasks, target_date: date_type):
+    idx = week_day_index(target_date)
+    result = []
+    for task in tasks:
+        if task.recurrence_type == "daily":
+            result.append(task)
+        elif task.recurrence_type == "weekly_days" and idx in (task.recurrence_days or []):
+            result.append(task)
+        elif task.recurrence_type == "once" and task.specific_date == target_date:
+            result.append(task)
+    return result
+
+
 @router.get("", response_model=list[schemas.TaskOut])
 def list_tasks(db: Session = Depends(get_db)):
     return db.query(models.Task).filter(models.Task.is_active.is_(True)).all()
@@ -18,16 +31,7 @@ def list_tasks(db: Session = Depends(get_db)):
 @router.get("/daily", response_model=list[schemas.DailyTaskOut])
 def list_daily_tasks(date: date_type = Query(...), db: Session = Depends(get_db)):
     tasks = db.query(models.Task).filter(models.Task.is_active.is_(True)).all()
-    idx = week_day_index(date)
-
-    applicable = []
-    for task in tasks:
-        if task.recurrence_type == "daily":
-            applicable.append(task)
-        elif task.recurrence_type == "weekly_days" and idx in (task.recurrence_days or []):
-            applicable.append(task)
-        elif task.recurrence_type == "once" and task.specific_date == date:
-            applicable.append(task)
+    applicable = _applicable_tasks(tasks, date)
 
     completions = {
         c.task_id
@@ -50,6 +54,39 @@ def list_daily_tasks(date: date_type = Query(...), db: Session = Depends(get_db)
         )
         for t in applicable
     ]
+
+
+@router.get("/range", response_model=list[schemas.DaySummary])
+def list_range_summary(
+    start: date_type = Query(...), end: date_type = Query(...), db: Session = Depends(get_db)
+):
+    if end < start:
+        raise HTTPException(status_code=400, detail="تاریخ پایان نمی‌تواند قبل از شروع باشد")
+
+    tasks = db.query(models.Task).filter(models.Task.is_active.is_(True)).all()
+
+    completed_counts = {}
+    for row in (
+        db.query(models.TaskCompletion.date, models.TaskCompletion.task_id)
+        .filter(
+            models.TaskCompletion.date >= start,
+            models.TaskCompletion.date <= end,
+            models.TaskCompletion.completed.is_(True),
+        )
+        .all()
+    ):
+        completed_counts.setdefault(row.date, set()).add(row.task_id)
+
+    summaries = []
+    current = start
+    while current <= end:
+        applicable = _applicable_tasks(tasks, current)
+        done_ids = completed_counts.get(current, set())
+        done = sum(1 for t in applicable if t.id in done_ids)
+        summaries.append(schemas.DaySummary(date=current, total=len(applicable), done=done))
+        current += timedelta(days=1)
+
+    return summaries
 
 
 @router.post("", response_model=schemas.TaskOut, status_code=201)
