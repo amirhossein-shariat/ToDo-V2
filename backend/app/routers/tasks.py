@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app import models, schemas
+from app.auth import get_current_user
 from app.database import get_db
 from app.utils import compute_streak, is_applicable
 
@@ -21,14 +22,39 @@ def _applicable_tasks(tasks, target_date: date_type):
     return result
 
 
+def _owned_task(db: Session, task_id: int, user: models.User) -> models.Task:
+    task = (
+        db.query(models.Task)
+        .filter(models.Task.id == task_id, models.Task.user_id == user.id)
+        .first()
+    )
+    if not task:
+        raise HTTPException(status_code=404, detail="تسک پیدا نشد")
+    return task
+
+
 @router.get("", response_model=list[schemas.TaskOut])
-def list_tasks(db: Session = Depends(get_db)):
-    return db.query(models.Task).filter(models.Task.is_active.is_(True)).all()
+def list_tasks(
+    db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)
+):
+    return (
+        db.query(models.Task)
+        .filter(models.Task.is_active.is_(True), models.Task.user_id == current_user.id)
+        .all()
+    )
 
 
 @router.get("/daily", response_model=list[schemas.DailyTaskOut])
-def list_daily_tasks(date: date_type = Query(...), db: Session = Depends(get_db)):
-    tasks = db.query(models.Task).filter(models.Task.is_active.is_(True)).all()
+def list_daily_tasks(
+    date: date_type = Query(...),
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    tasks = (
+        db.query(models.Task)
+        .filter(models.Task.is_active.is_(True), models.Task.user_id == current_user.id)
+        .all()
+    )
     applicable = _applicable_tasks(tasks, date)
 
     today = date_type.today()
@@ -39,6 +65,7 @@ def list_daily_tasks(date: date_type = Query(...), db: Session = Depends(get_db)
             for c in db.query(models.TaskCompletion.task_id).join(
                 models.Task, models.Task.id == models.TaskCompletion.task_id
             ).filter(
+                models.Task.user_id == current_user.id,
                 models.Task.recurrence_type == "once",
                 models.TaskCompletion.completed.is_(True),
             )
@@ -54,21 +81,17 @@ def list_daily_tasks(date: date_type = Query(...), db: Session = Depends(get_db)
         overdue_ids = {t.id for t in overdue_tasks}
         applicable = applicable + overdue_tasks
 
-    completions = {
-        c.task_id
-        for c in db.query(models.TaskCompletion).filter(
-            models.TaskCompletion.date == date,
-            models.TaskCompletion.completed.is_(True),
-        )
-    }
-
+    task_ids = [t.id for t in applicable]
+    completions = set()
     completions_by_task = {}
-    if applicable:
+    if task_ids:
         for row in db.query(models.TaskCompletion.task_id, models.TaskCompletion.date).filter(
-            models.TaskCompletion.task_id.in_([t.id for t in applicable]),
+            models.TaskCompletion.task_id.in_(task_ids),
             models.TaskCompletion.completed.is_(True),
         ):
             completions_by_task.setdefault(row.task_id, set()).add(row.date)
+            if row.date == date:
+                completions.add(row.task_id)
 
     return [
         schemas.DailyTaskOut(
@@ -91,10 +114,16 @@ def list_daily_tasks(date: date_type = Query(...), db: Session = Depends(get_db)
 
 
 @router.get("/streaks", response_model=list[schemas.TaskStreakOut])
-def list_streaks(db: Session = Depends(get_db)):
+def list_streaks(
+    db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)
+):
     tasks = (
         db.query(models.Task)
-        .filter(models.Task.is_active.is_(True), models.Task.recurrence_type.in_(["daily", "weekly_days"]))
+        .filter(
+            models.Task.is_active.is_(True),
+            models.Task.user_id == current_user.id,
+            models.Task.recurrence_type.in_(["daily", "weekly_days"]),
+        )
         .all()
     )
     completions_by_task = {}
@@ -118,24 +147,33 @@ def list_streaks(db: Session = Depends(get_db)):
 
 @router.get("/range", response_model=list[schemas.DaySummary])
 def list_range_summary(
-    start: date_type = Query(...), end: date_type = Query(...), db: Session = Depends(get_db)
+    start: date_type = Query(...),
+    end: date_type = Query(...),
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
 ):
     if end < start:
         raise HTTPException(status_code=400, detail="تاریخ پایان نمی‌تواند قبل از شروع باشد")
 
-    tasks = db.query(models.Task).filter(models.Task.is_active.is_(True)).all()
+    tasks = (
+        db.query(models.Task)
+        .filter(models.Task.is_active.is_(True), models.Task.user_id == current_user.id)
+        .all()
+    )
 
     completed_counts = {}
-    for row in (
-        db.query(models.TaskCompletion.date, models.TaskCompletion.task_id)
-        .filter(
-            models.TaskCompletion.date >= start,
-            models.TaskCompletion.date <= end,
-            models.TaskCompletion.completed.is_(True),
-        )
-        .all()
-    ):
-        completed_counts.setdefault(row.date, set()).add(row.task_id)
+    if tasks:
+        for row in (
+            db.query(models.TaskCompletion.date, models.TaskCompletion.task_id)
+            .filter(
+                models.TaskCompletion.task_id.in_([t.id for t in tasks]),
+                models.TaskCompletion.date >= start,
+                models.TaskCompletion.date <= end,
+                models.TaskCompletion.completed.is_(True),
+            )
+            .all()
+        ):
+            completed_counts.setdefault(row.date, set()).add(row.task_id)
 
     summaries = []
     current = start
@@ -161,7 +199,10 @@ def list_range_summary(
 
 @router.get("/tag-stats", response_model=list[schemas.TagStat])
 def tag_stats(
-    start: date_type = Query(...), end: date_type = Query(...), db: Session = Depends(get_db)
+    start: date_type = Query(...),
+    end: date_type = Query(...),
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
 ):
     if end < start:
         raise HTTPException(status_code=400, detail="تاریخ پایان نمی‌تواند قبل از شروع باشد")
@@ -170,6 +211,7 @@ def tag_stats(
         db.query(models.Task.tag, models.TaskCompletion.task_id)
         .join(models.TaskCompletion, models.TaskCompletion.task_id == models.Task.id)
         .filter(
+            models.Task.user_id == current_user.id,
             models.TaskCompletion.date >= start,
             models.TaskCompletion.date <= end,
             models.TaskCompletion.completed.is_(True),
@@ -185,8 +227,12 @@ def tag_stats(
 
 
 @router.post("", response_model=schemas.TaskOut, status_code=201)
-def create_task(payload: schemas.TaskCreate, db: Session = Depends(get_db)):
-    task = models.Task(**payload.model_dump())
+def create_task(
+    payload: schemas.TaskCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    task = models.Task(**payload.model_dump(), user_id=current_user.id)
     db.add(task)
     db.commit()
     db.refresh(task)
@@ -194,10 +240,13 @@ def create_task(payload: schemas.TaskCreate, db: Session = Depends(get_db)):
 
 
 @router.put("/{task_id}", response_model=schemas.TaskOut)
-def update_task(task_id: int, payload: schemas.TaskUpdate, db: Session = Depends(get_db)):
-    task = db.query(models.Task).filter(models.Task.id == task_id).first()
-    if not task:
-        raise HTTPException(status_code=404, detail="تسک پیدا نشد")
+def update_task(
+    task_id: int,
+    payload: schemas.TaskUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    task = _owned_task(db, task_id, current_user)
     for key, value in payload.model_dump(exclude_unset=True).items():
         setattr(task, key, value)
     db.commit()
@@ -206,22 +255,25 @@ def update_task(task_id: int, payload: schemas.TaskUpdate, db: Session = Depends
 
 
 @router.delete("/{task_id}", status_code=204)
-def delete_task(task_id: int, db: Session = Depends(get_db)):
-    task = db.query(models.Task).filter(models.Task.id == task_id).first()
-    if not task:
-        raise HTTPException(status_code=404, detail="تسک پیدا نشد")
+def delete_task(
+    task_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    task = _owned_task(db, task_id, current_user)
     task.is_active = False
     db.commit()
 
 
 @router.delete("/{task_id}/occurrence", status_code=204)
 def delete_task_occurrence(
-    task_id: int, date: date_type = Query(...), db: Session = Depends(get_db)
+    task_id: int,
+    date: date_type = Query(...),
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
 ):
     """حذف یک تسک تکرارشونده فقط برای یک روز مشخص (بدون تأثیر روی روزهای دیگر)."""
-    task = db.query(models.Task).filter(models.Task.id == task_id).first()
-    if not task:
-        raise HTTPException(status_code=404, detail="تسک پیدا نشد")
+    _owned_task(db, task_id, current_user)
 
     completion = (
         db.query(models.TaskCompletion)
@@ -243,10 +295,13 @@ def delete_task_occurrence(
 
 
 @router.post("/{task_id}/toggle", response_model=schemas.DailyTaskOut)
-def toggle_completion(task_id: int, date: date_type = Query(...), db: Session = Depends(get_db)):
-    task = db.query(models.Task).filter(models.Task.id == task_id).first()
-    if not task:
-        raise HTTPException(status_code=404, detail="تسک پیدا نشد")
+def toggle_completion(
+    task_id: int,
+    date: date_type = Query(...),
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    task = _owned_task(db, task_id, current_user)
 
     completion = (
         db.query(models.TaskCompletion)

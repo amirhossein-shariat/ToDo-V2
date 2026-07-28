@@ -57,3 +57,10 @@ export async function getPendingOps() {
 export async function removePendingOp(id) {
   return (await dbPromise).delete('pending_ops', id)
 }
+
+const ALL_STORES = ['tasks', 'goals', 'goal_tasks', 'completions', 'skips', 'pending_ops', 'meta']
+
+export async function clearAllData() {
+  const db = await dbPromise
+  await Promise.all(ALL_STORES.map((store) => db.clear(store)))
+}

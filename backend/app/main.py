@@ -7,7 +7,7 @@ from sqlalchemy import text
 
 from app.database import Base, engine
 from app import models  # noqa: F401 — ensures models are registered before create_all
-from app.routers import tasks, goals, sync
+from app.routers import tasks, goals, sync, auth
 
 Base.metadata.create_all(bind=engine)
 
@@ -26,6 +26,9 @@ with engine.connect() as conn:
     if "updated_at" not in existing_columns:
         conn.execute(text("ALTER TABLE tasks ADD COLUMN updated_at DATETIME"))
         conn.commit()
+    if "user_id" not in existing_columns:
+        conn.execute(text("ALTER TABLE tasks ADD COLUMN user_id INTEGER"))
+        conn.commit()
 
     goal_columns = {row[1] for row in conn.execute(text("PRAGMA table_info(goals)"))}
     if "tag" not in goal_columns:
@@ -36,6 +39,9 @@ with engine.connect() as conn:
         conn.commit()
     if "is_active" not in goal_columns:
         conn.execute(text("ALTER TABLE goals ADD COLUMN is_active BOOLEAN DEFAULT 1"))
+        conn.commit()
+    if "user_id" not in goal_columns:
+        conn.execute(text("ALTER TABLE goals ADD COLUMN user_id INTEGER"))
         conn.commit()
 
     goal_task_columns = {row[1] for row in conn.execute(text("PRAGMA table_info(goal_tasks)"))}
@@ -63,6 +69,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth.router)
 app.include_router(tasks.router)
 app.include_router(goals.router)
 app.include_router(sync.router)

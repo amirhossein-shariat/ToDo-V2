@@ -50,7 +50,7 @@ export default function SyncButton() {
       onClick={() => runSync()}
       whileTap={{ scale: 0.88 }}
       whileHover={{ scale: 1.05 }}
-      className={`fixed left-3 top-3 z-40 flex h-8 w-8 items-center justify-center rounded-full border backdrop-blur-lg shadow-md ${colorClass}`}
+      className={`relative flex h-8 w-8 items-center justify-center rounded-full border backdrop-blur-lg shadow-md ${colorClass}`}
       aria-label={label}
       title={label}
     >

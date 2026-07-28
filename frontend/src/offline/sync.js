@@ -1,4 +1,5 @@
 import { getAll, put, remove, getPendingOps, removePendingOp, getMeta, setMeta } from './db'
+import { authHeaders, clearSession, isLoggedIn } from '../auth'
 
 const BASE = '/api'
 
@@ -18,9 +19,14 @@ function notify(status) {
 
 async function rawRequest(url, options = {}) {
   const res = await fetch(`${BASE}${url}`, {
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
     ...options,
   })
+  if (res.status === 401) {
+    clearSession()
+    notify('unauthorized')
+    throw new Error('unauthorized')
+  }
   if (!res.ok) throw new Error('network')
   if (res.status === 204) return null
   return res.json()
@@ -69,6 +75,7 @@ async function pullDelta() {
 }
 
 export async function runSync() {
+  if (!isLoggedIn()) return
   if (syncing || (typeof navigator !== 'undefined' && !navigator.onLine)) return
   syncing = true
   notify('syncing')

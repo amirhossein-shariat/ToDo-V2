@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app import models
+from app.auth import get_current_user
 from app.database import get_db
 
 router = APIRouter(prefix="/api/sync", tags=["sync"])
@@ -20,19 +21,32 @@ def _parse_since(since: Optional[str]):
 
 
 @router.get("")
-def get_delta(since: Optional[str] = Query(None), db: Session = Depends(get_db)):
-    """تغییرات از زمان `since` به بعد (فرمت ISO). اگر خالی باشد، همه‌چیز برمی‌گردد
-    (اولین همگام‌سازی روی یک دستگاه جدید). برای کمینه‌کردن حجم داده، فقط
-    رکوردهای تغییریافته (شامل حذف‌شده‌ها به‌صورت is_active=false) ارسال می‌شوند.
+def get_delta(
+    since: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """تغییرات از زمان `since` به بعد (فرمت ISO)، فقط برای کاربر جاری. اگر خالی
+    باشد، همه‌چیز برمی‌گردد (اولین همگام‌سازی روی یک دستگاه جدید). برای
+    کمینه‌کردن حجم داده، فقط رکوردهای تغییریافته (شامل حذف‌شده‌ها به‌صورت
+    is_active=false) ارسال می‌شوند.
     """
     since_dt = _parse_since(since)
     server_time = datetime.now(timezone.utc).replace(tzinfo=None)
 
-    tasks_q = db.query(models.Task)
-    goals_q = db.query(models.Goal)
-    goal_tasks_q = db.query(models.GoalTask)
-    completions_q = db.query(models.TaskCompletion)
-    skips_q = db.query(models.TaskSkip)
+    tasks_q = db.query(models.Task).filter(models.Task.user_id == current_user.id)
+    goals_q = db.query(models.Goal).filter(models.Goal.user_id == current_user.id)
+    goal_tasks_q = (
+        db.query(models.GoalTask)
+        .join(models.Goal, models.Goal.id == models.GoalTask.goal_id)
+        .filter(models.Goal.user_id == current_user.id)
+    )
+    completions_q = db.query(models.TaskCompletion).join(
+        models.Task, models.Task.id == models.TaskCompletion.task_id
+    ).filter(models.Task.user_id == current_user.id)
+    skips_q = db.query(models.TaskSkip).join(
+        models.Task, models.Task.id == models.TaskSkip.task_id
+    ).filter(models.Task.user_id == current_user.id)
 
     if since_dt:
         tasks_q = tasks_q.filter(models.Task.updated_at > since_dt)

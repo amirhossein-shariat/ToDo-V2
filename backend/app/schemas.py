@@ -135,6 +135,20 @@ class TaskStreakOut(BaseModel):
     streak: int
 
 
+class LoginRequest(BaseModel):
+    phone: str
+    pin: str
+
+
+class AuthResponse(BaseModel):
+    token: str
+    phone: str
+
+
+class MeResponse(BaseModel):
+    phone: str
+
+
 class GoalOut(BaseModel):
     id: int
     title: str
