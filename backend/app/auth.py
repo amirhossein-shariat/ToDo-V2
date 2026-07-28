@@ -12,17 +12,24 @@ from app.database import get_db
 PIN_PATTERN = re.compile(r"^\d{4}$")
 
 
+_DIGIT_TRANSLATION = str.maketrans(
+    "۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩", "01234567890123456789"
+)
+
+
 def normalize_phone(phone: str) -> str:
-    digits = re.sub(r"\D", "", phone or "")
+    ascii_phone = (phone or "").translate(_DIGIT_TRANSLATION)
+    digits = re.sub(r"\D", "", ascii_phone)
     if len(digits) < 8:
         raise HTTPException(status_code=400, detail="شماره تلفن نامعتبر است")
     return digits
 
 
 def validate_pin(pin: str) -> str:
-    if not PIN_PATTERN.match(pin or ""):
+    ascii_pin = (pin or "").translate(_DIGIT_TRANSLATION)
+    if not PIN_PATTERN.match(ascii_pin):
         raise HTTPException(status_code=400, detail="رمز باید دقیقاً ۴ رقم باشد")
-    return pin
+    return ascii_pin
 
 
 def hash_pin(pin: str, salt: bytes | None = None) -> str:
