@@ -20,3 +20,18 @@ body {
 #root {
   min-height: 100vh;
 }
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #print-report,
+  #print-report * {
+    visibility: visible;
+  }
+  #print-report {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+  }
+}

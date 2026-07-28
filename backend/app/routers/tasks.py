@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app import models, schemas
 from app.database import get_db
-from app.utils import week_day_index
+from app.utils import week_day_index, compute_streak
 
 router = APIRouter(prefix="/api/tasks", tags=["tasks"])
 
@@ -41,6 +41,16 @@ def list_daily_tasks(date: date_type = Query(...), db: Session = Depends(get_db)
         )
     }
 
+    completions_by_task = {}
+    if applicable:
+        for row in db.query(models.TaskCompletion.task_id, models.TaskCompletion.date).filter(
+            models.TaskCompletion.task_id.in_([t.id for t in applicable]),
+            models.TaskCompletion.completed.is_(True),
+        ):
+            completions_by_task.setdefault(row.task_id, set()).add(row.date)
+
+    today = date_type.today()
+
     return [
         schemas.DailyTaskOut(
             id=t.id,
@@ -50,9 +60,37 @@ def list_daily_tasks(date: date_type = Query(...), db: Session = Depends(get_db)
             recurrence_days=t.recurrence_days,
             specific_date=t.specific_date,
             is_active=t.is_active,
+            goal_task_id=t.goal_task_id,
             completed=t.id in completions,
+            streak=compute_streak(t, completions_by_task.get(t.id, set()), today),
         )
         for t in applicable
+    ]
+
+
+@router.get("/streaks", response_model=list[schemas.TaskStreakOut])
+def list_streaks(db: Session = Depends(get_db)):
+    tasks = (
+        db.query(models.Task)
+        .filter(models.Task.is_active.is_(True), models.Task.recurrence_type.in_(["daily", "weekly_days"]))
+        .all()
+    )
+    completions_by_task = {}
+    if tasks:
+        for row in db.query(models.TaskCompletion.task_id, models.TaskCompletion.date).filter(
+            models.TaskCompletion.task_id.in_([t.id for t in tasks]),
+            models.TaskCompletion.completed.is_(True),
+        ):
+            completions_by_task.setdefault(row.task_id, set()).add(row.date)
+
+    today = date_type.today()
+    return [
+        schemas.TaskStreakOut(
+            id=t.id,
+            title=t.title,
+            streak=compute_streak(t, completions_by_task.get(t.id, set()), today),
+        )
+        for t in tasks
     ]
 
 
@@ -140,6 +178,14 @@ def toggle_completion(task_id: int, date: date_type = Query(...), db: Session = 
 
     db.commit()
 
+    completed_dates = {
+        c.date
+        for c in db.query(models.TaskCompletion).filter(
+            models.TaskCompletion.task_id == task_id,
+            models.TaskCompletion.completed.is_(True),
+        )
+    }
+
     return schemas.DailyTaskOut(
         id=task.id,
         title=task.title,
@@ -148,5 +194,7 @@ def toggle_completion(task_id: int, date: date_type = Query(...), db: Session = 
         recurrence_days=task.recurrence_days,
         specific_date=task.specific_date,
         is_active=task.is_active,
+        goal_task_id=task.goal_task_id,
         completed=completed,
+        streak=compute_streak(task, completed_dates, date_type.today()),
     )

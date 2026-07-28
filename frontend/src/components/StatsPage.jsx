@@ -11,9 +11,10 @@ import {
   LineChart,
   Line,
 } from 'recharts'
-import { getRangeSummary } from '../api'
+import { getRangeSummary, getTaskStreaks, getGoals } from '../api'
 import { WEEK_DAYS } from '../constants'
 import { gregorianToJalali, jalaliToGregorian, jalaliMonthLength } from '../utils/jalali'
+import ReportModal from './ReportModal'
 
 function toDateStr(d) {
   return format(d, 'yyyy-MM-dd')
@@ -40,7 +41,10 @@ export default function StatsPage() {
   const [weekData, setWeekData] = useState([])
   const [monthSummaries, setMonthSummaries] = useState([])
   const [prevWeekTotals, setPrevWeekTotals] = useState(null)
+  const [streaks, setStreaks] = useState([])
   const [loading, setLoading] = useState(true)
+  const [reportOpen, setReportOpen] = useState(false)
+  const [reportData, setReportData] = useState(null)
 
   useEffect(() => {
     setLoading(true)
@@ -48,8 +52,9 @@ export default function StatsPage() {
       getRangeSummary(toDateStr(weekStart), toDateStr(addDays(weekStart, 6))),
       getRangeSummary(toDateStr(monthStart), toDateStr(monthEnd)),
       getRangeSummary(toDateStr(prevWeekStart), toDateStr(addDays(prevWeekStart, 6))),
+      getTaskStreaks(),
     ])
-      .then(([week, month, prevWeek]) => {
+      .then(([week, month, prevWeek, streakList]) => {
         setWeekData(
           week.map((row, idx) => ({
             ...row,
@@ -64,6 +69,7 @@ export default function StatsPage() {
             { done: 0, total: 0 },
           ),
         )
+        setStreaks(streakList.filter((s) => s.streak > 0).sort((a, b) => b.streak - a.streak))
       })
       .finally(() => setLoading(false))
   }, [toDateStr(weekStart), toDateStr(monthStart), toDateStr(monthEnd)])
@@ -97,6 +103,12 @@ export default function StatsPage() {
       ? Math.round((prevWeekTotals.done / prevWeekTotals.total) * 100)
       : 0
   const delta = currentPercent - prevPercent
+
+  const handleOpenReport = async () => {
+    const goals = await getGoals()
+    setReportData({ weekData, weeklyTrend, streaks, goals })
+    setReportOpen(true)
+  }
 
   if (loading) {
     return <p className="text-center text-white/40">در حال بارگذاری...</p>
@@ -165,6 +177,31 @@ export default function StatsPage() {
           </div>
         </div>
       </div>
+
+      {streaks.length > 0 && (
+        <div className="rounded-2xl border border-white/15 bg-white/5 p-4 backdrop-blur-lg">
+          <h3 className="mb-3 font-medium text-white">رشته‌های پیوسته (Streak)</h3>
+          <div className="space-y-2">
+            {streaks.map((s) => (
+              <div key={s.id} className="flex items-center justify-between text-sm">
+                <span className="text-white/80">{s.title}</span>
+                <span className="flex items-center gap-1 font-medium text-amber-300">
+                  🔥 {s.streak} روز
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <button
+        onClick={handleOpenReport}
+        className="w-full rounded-2xl border border-white/15 bg-sky-500/20 p-4 font-medium text-sky-200 backdrop-blur-lg hover:bg-sky-500/30"
+      >
+        📄 دانلود گزارش کامل (PDF / Word)
+      </button>
+
+      <ReportModal open={reportOpen} onClose={() => setReportOpen(false)} data={reportData} />
     </div>
   )
 }

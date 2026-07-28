@@ -30,6 +30,9 @@ class Task(Base):
     # for recurrence_type == 'once'
     specific_date = Column(Date, nullable=True)
 
+    # اگر این تسک از یک زیرتسک هدف ساخته شده باشد
+    goal_task_id = Column(Integer, ForeignKey("goal_tasks.id"), nullable=True)
+
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 

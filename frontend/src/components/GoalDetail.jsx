@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { createGoalTask, updateGoalTask, deleteGoalTask } from '../api'
+import { format } from 'date-fns'
+import { createGoalTask, updateGoalTask, deleteGoalTask, addGoalTaskToDaily } from '../api'
 
 export default function GoalDetail({ goal, onBack, onChanged, onEdit, onDelete }) {
   const [newTitle, setNewTitle] = useState('')
   const [busy, setBusy] = useState(false)
+  const [addedId, setAddedId] = useState(null)
 
   const total = goal.tasks.length
   const done = goal.tasks.filter((t) => t.is_done).length
@@ -31,6 +33,12 @@ export default function GoalDetail({ goal, onBack, onChanged, onEdit, onDelete }
   const handleDeleteTask = async (task) => {
     await deleteGoalTask(task.id)
     onChanged()
+  }
+
+  const handleAddToDaily = async (task) => {
+    await addGoalTaskToDaily(task.id, format(new Date(), 'yyyy-MM-dd'))
+    setAddedId(task.id)
+    setTimeout(() => setAddedId((id) => (id === task.id ? null : id)), 1800)
   }
 
   return (
@@ -127,6 +135,28 @@ export default function GoalDetail({ goal, onBack, onChanged, onEdit, onDelete }
               <p className={`flex-1 text-right ${task.is_done ? 'text-white/40 line-through' : 'text-white'}`}>
                 {task.title}
               </p>
+              <button
+                onClick={() => handleAddToDaily(task)}
+                disabled={addedId === task.id}
+                className={`rounded-lg p-1.5 transition-colors ${
+                  addedId === task.id
+                    ? 'text-emerald-300'
+                    : 'text-white/40 hover:bg-sky-500/20 hover:text-sky-300'
+                }`}
+                aria-label="افزودن به تسک‌های امروز"
+                title="افزودن به تسک‌های امروز"
+              >
+                {addedId === task.id ? (
+                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3M4 11h16M5 7h14a1 1 0 011 1v11a1 1 0 01-1 1H5a1 1 0 01-1-1V8a1 1 0 011-1z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 14v4m-2-2h4" />
+                  </svg>
+                )}
+              </button>
               <button
                 onClick={() => handleDeleteTask(task)}
                 className="rounded-lg p-1.5 text-white/40 hover:bg-red-500/20 hover:text-red-300"

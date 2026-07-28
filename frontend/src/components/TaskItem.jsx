@@ -43,7 +43,14 @@ export default function TaskItem({ task, onToggle, onEdit, onDelete }) {
         >
           {task.title}
         </p>
-        <p className="text-xs text-white/40">{RECURRENCE_LABELS[task.recurrence_type]}</p>
+        <p className="flex items-center gap-1.5 text-xs text-white/40">
+          <span>{RECURRENCE_LABELS[task.recurrence_type]}</span>
+          {task.streak > 0 && (
+            <span className="inline-flex items-center gap-0.5 text-amber-300">
+              🔥 {task.streak}
+            </span>
+          )}
+        </p>
       </div>
 
       <div className="flex shrink-0 gap-1">

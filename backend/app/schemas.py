@@ -47,6 +47,7 @@ class TaskUpdate(BaseModel):
 class TaskOut(TaskBase):
     id: int
     is_active: bool
+    goal_task_id: Optional[int] = None
 
     class Config:
         from_attributes = True
@@ -54,6 +55,7 @@ class TaskOut(TaskBase):
 
 class DailyTaskOut(TaskOut):
     completed: bool
+    streak: int = 0
 
 
 class DaySummary(BaseModel):
@@ -89,6 +91,12 @@ class GoalCreate(BaseModel):
 class GoalUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
+
+
+class TaskStreakOut(BaseModel):
+    id: int
+    title: str
+    streak: int
 
 
 class GoalOut(BaseModel):

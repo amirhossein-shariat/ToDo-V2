@@ -1,11 +1,19 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 
 from app.database import Base, engine
 from app import models  # noqa: F401 — ensures models are registered before create_all
 from app.routers import tasks, goals
 
 Base.metadata.create_all(bind=engine)
+
+# مایگریشن سبک: افزودن ستون‌های جدید به جدول‌های قبلاً موجود بدون از دست دادن داده
+with engine.connect() as conn:
+    existing_columns = {row[1] for row in conn.execute(text("PRAGMA table_info(tasks)"))}
+    if "goal_task_id" not in existing_columns:
+        conn.execute(text("ALTER TABLE tasks ADD COLUMN goal_task_id INTEGER"))
+        conn.commit()
 
 app = FastAPI(title="TodoApp API")
 
